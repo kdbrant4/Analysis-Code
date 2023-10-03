@@ -1,0 +1,2022 @@
+#Model validation comparison in BCRPP
+
+
+########################################################
+#Step 1. Read in box directory
+########################################################
+install.packages("tidyverse")
+install.packages("palmerpenguins")
+install.packages(c("boxr", "base", "usethis"))
+
+library(boxr)
+
+  ###########################
+  # AUTHENTICATION
+  ###########################
+  # Authentication is the process of syncing RStudio with your Box.com account.
+  # If you are not already logged into Box after running this code, you may be
+  # asked to log into Box. Identify Box as hard disk in the cloud.
+  
+  box_auth(client_id = "627lww8un9twnoa8f9rjvldf7kb56q1m",
+           client_secret = "gSKdYKLd65aQpZGrq9x4QVUNnn5C8qqm") 
+  
+  # Set the working directory to your Box folder using the folder ID
+  box_setwd(dir_id=216031179182)
+
+  ###########################
+  # READING IN FILES
+  ###########################
+  # box_read reads the file into local memory - see the console after running the 
+  # code. After closing your RStudio session the file/data is deleted from the 
+  # temporary local memory.
+  
+  # NOTE: The file ID is needed to read in the data
+  
+  nhs_core_data =  box_read(file_id = 1245072725343)
+  nhs_brca_data =  box_read(file_id = 1245060603521)
+  nhs2_core_data = box_read(file_id = 1234617009726)
+  nhs2_brca_data = box_read(file_id = 1234617300601)
+  plco_core_data = box_read(file_id = 1288862420965)
+  plco_brca_data = box_read(file_id = 1288860429050)
+  
+  nhs_core_data$cohort<-"NHS"
+  nhs2_core_data$cohort<-"NHS2"
+  plco_core_data$cohort<-"PLCO"
+
+########################################################
+#Step 2. Combine all cohort data
+########################################################
+
+nhs_allcase<-merge(nhs_core_data, nhs_brca_data, by="subject_id")
+nhs2_allcase<-merge(nhs2_core_data, nhs2_brca_data, by="subject_id")
+plco_allcase<-merge(plco_core_data, plco_brca_data, by="subject_id")
+
+nhscontrol<-setdiff(nhs_core_data$subject_id,nhs_brca_data$subject_id)
+nhs2control<-setdiff(nhs2_core_data$subject_id,nhs2_brca_data$subject_id)
+plcocontrol<-setdiff(plco_core_data$subject_id,plco_brca_data$subject_id)
+
+nhs_allcontrol<-nhs_core_data[which (nhs_core_data$subject_id %in% nhscontrol),]
+nhs2_allcontrol<-nhs2_core_data[which (nhs2_core_data$subject_id %in% nhs2control),]
+plco_allcontrol<-plco_core_data[which (plco_core_data$subject_id %in% plcocontrol),]
+#colnames(nhs2_brca_data)
+
+library('tidyverse')
+nhs_allcontrol<- nhs_allcontrol %>%
+  add_column(lastfup=NA,
+             dxdate_primary1=NA,
+             dxdate_primary2=NA,
+             detection_primary1=NA,
+             detection_detail_primary1=NA,
+             detection_detail_primary2=NA,
+             detection_primary2=NA,
+             invasive_primary1=NA,
+             invasive_primary2=NA,
+             grade_primary1=NA,
+             size_primary1=NA,
+             sizecat_primary1=NA, 
+             er_primary1=NA,
+             er_primary2=NA,
+             pr_primary1=NA,
+             pr_primary2=NA,
+             her2_primary1=NA,
+             her2_primary2=NA,
+             ki67_primary1=NA,
+             ki67_primary2=NA,
+             ki67cat_primary1=NA,
+             ki67cat_primary2=NA,
+             stage_primary1=NA,
+             stage_primary2=NA,
+             grade_primary2=NA,
+             size_primary2=NA,
+             sizecat_primary2=NA,
+             case=0
+             
+  )
+
+nhs2_allcontrol<- nhs2_allcontrol %>%
+  add_column(lastfup=NA,
+             dxdate_primary1=NA,
+             dxdate_primary2=NA,
+             detection_primary1=NA,
+             detection_detail_primary1=NA,
+             detection_detail_primary2=NA,
+             detection_primary2=NA,
+             invasive_primary1=NA,
+             invasive_primary2=NA,
+             grade_primary1=NA,
+             size_primary1=NA,
+             sizecat_primary1=NA, 
+             er_primary1=NA,
+             er_primary2=NA,
+             pr_primary1=NA,
+             pr_primary2=NA,
+             her2_primary1=NA,
+             her2_primary2=NA,
+             ki67_primary1=NA,
+             ki67_primary2=NA,
+             ki67cat_primary1=NA,
+             ki67cat_primary2=NA,
+             stage_primary1=NA,
+             stage_primary2=NA,
+             grade_primary2=NA,
+             size_primary2=NA,
+             sizecat_primary2=NA,
+             case=0
+             
+  )
+
+plco_allcontrol<- plco_allcontrol %>%
+  add_column(lastfup=NA,
+             dxdate_primary1=NA,
+             dxdate_primary2=NA,
+             detection_primary1=NA,
+             detection_detail_primary1=NA,
+             detection_detail_primary2=NA,
+             detection_primary2=NA,
+             invasive_primary1=NA,
+             invasive_primary2=NA,
+             grade_primary1=NA,
+             size_primary1=NA,
+             sizecat_primary1=NA, 
+             er_primary1=NA,
+             er_primary2=NA,
+             pr_primary1=NA,
+             pr_primary2=NA,
+             her2_primary1=NA,
+             her2_primary2=NA,
+             ki67_primary1=NA,
+             ki67_primary2=NA,
+             ki67cat_primary1=NA,
+             ki67cat_primary2=NA,
+             stage_primary1=NA,
+             stage_primary2=NA,
+             grade_primary2=NA,
+             size_primary2=NA,
+             sizecat_primary2=NA,
+             case=0
+  )
+
+plco_allcase$case<-1
+plco_allcase$cohort<-"PLCO"
+nhs_allcase$case<-1
+nhs_allcase$cohort<-"NHS"
+nhs2_allcase$case<-1
+nhs2_allcase$cohort<-"NHS2"
+#check if differences exist
+setdiff(colnames(nhs_allcontrol), colnames(nhs_allcase))
+#id.x and id.y rename to "id" for plco
+colnames(plco_allcase)[colnames(plco_allcase) == "id.x"] ="id"
+#delete id.y 
+drop<-c("id.y")
+plco_allcase<-plco_allcase[,!(names(plco_allcase) %in% drop)]
+
+#add lastfup and her2_primary2 
+plco_allcase$lastfup<-8888
+plco_allcase$her2_primary2<-888
+#add col names to all control for brca data so can merge, but set all to NA
+nhs_all<-rbind(nhs_allcontrol, nhs_allcase)
+nhs2_all<-rbind(nhs2_allcontrol, nhs2_allcase)
+plco_all<-rbind(plco_allcontrol, plco_allcase)
+#r bind
+#nhs and nhs2 are the same
+#plco has some differences
+#setdiff(colnames(plco_all), colnames(nhs_all))
+#setdiff(colnames(nhs_all),colnames(plco_all))
+
+#add alcohol_status and alcohol_dur, and whr, pa_mets, and pa_pct, ocuse_dur, smoking_amt, lastfup & set to missing in plco
+
+plco_all$alcohol_status<-888
+plco_all$alcohol_dur<-888
+plco_all$whr<-888
+plco_all$pa_mets<-888
+plco_all$pa_pct<-888
+plco_all$ocuse_dur<-888
+plco_all$smoking_amt<-888
+plco_all$record_date<-"08/08/8000"
+
+#add "record_days" to nhs and nhs2 so I can merge
+max(plco_all$record_days) #max is 945
+nhs_all$record_days<-8888
+nhs2_all$record_days<-8888
+
+#change colnames so they match for bbd 
+colnames(plco_all)[colnames(plco_all) == "ajancestry"] ="AJAncestry"
+colnames(plco_all)[colnames(plco_all) == "biopsies_number"] ="Biopsies_number"
+colnames(plco_all)[colnames(plco_all) == "biopsies_yesno"] ="Biopsies_yesno"
+colnames(plco_all)[colnames(plco_all) == "bbd_number"] ="BBD_number"
+colnames(plco_all)[colnames(plco_all) == "bbd_history"] ="BBD_history"
+colnames(plco_all)[colnames(plco_all) == "bbd_year1"] ="BBD_year1"
+colnames(plco_all)[colnames(plco_all) == "bbd_year2"] ="BBD_year2"
+colnames(plco_all)[colnames(plco_all) == "bbd_year3"] ="BBD_year3"
+colnames(plco_all)[colnames(plco_all) == "bbd_year4"] ="BBD_year4"
+colnames(plco_all)[colnames(plco_all) == "bbd_type1"] ="BBD_type1"
+colnames(plco_all)[colnames(plco_all) == "bbd_type2"] ="BBD_type2"
+colnames(plco_all)[colnames(plco_all) == "bbd_type3"] ="BBD_type3"
+colnames(plco_all)[colnames(plco_all) == "bbd_type4"] ="BBD_type4"
+
+
+  ##########################
+  # Merge files
+  ##########################
+  
+  data1<-rbind(nhs_all, nhs2_all, plco_all)
+  head(data1)
+  #Change date variables to date format - now they are character
+
+  ########################
+  # Formatting variables
+  ########################
+    
+    
+  library("dplyr")
+  library("lubridate")
+  
+  data1 <- data1 %>%
+    mutate(record_date=as.Date(record_date, format="%d/%m/%Y"))
+  
+  data1$BBD_date1<-ymd(data1$BBD_year1, truncated=2L)
+  data1$BBD_date2<-ymd(data1$BBD_year2, truncated=2L)
+  data1$BBD_date3<-ymd(data1$BBD_year3, truncated=2L)
+  data1$BBD_date4<-ymd(data1$BBD_year4, truncated=2L)
+  data1$birth_date<-ymd(data1$birth_year, truncated=2L)
+  data1$lastscreen_date<-ymd(data1$lastscreen_year, truncated=2L)
+  data1$primary1dx_date<-ymd(data1$dxdate_primary1, truncated=2L)
+  data1$primary2dx_date<-ymd(data1$dxdate_primary2, truncated=2L)
+  data1$lastfup_date<-ymd(data1$lastfup, truncated=2L)
+  
+  #Filter outliers
+  data1$age_outlier           <-ifelse(data1$age<=0   |data1$age<777     & data1$age>100, 1, 0)
+  data1$height_outlier        <-ifelse(data1$height<=0|data1$height<777  & data1$height>200, 1, 0)
+  data1$weight_outlier        <-ifelse(data1$weight<=0|data1$weight<777  & data1$weight>150, 1, 0)
+  data1$bmi_outlier           <-ifelse(data1$bmi<=0   |data1$bmi<777     & data1$bmi>50, 1, 0)
+  data1$waist_outlier         <-ifelse(data1$waist<=0|data1$waist<777    & data1$waist>160, 1, 0)
+  data1$hip_outlier           <-ifelse(data1$hip<=0|data1$hip<777        & data1$hip>160, 1, 0)
+  data1$wtohip_outlier        <-ifelse(data1$whr<=0   |data1$whr<777     & data1$whr>1.2, 1, 0)
+  data1$bmiearly_outlier      <-ifelse(data1$bmi_earlyadult<=0|data1$bmi_earlyadult<777 & data1$bmi_earlyadult>50, 1, 0)
+  
+  data1$alcoholinit_outlier   <-ifelse(data1$alcohol_init<=0|data1$alcohol_init<777     & data1$alcohol_init>70, 1, 0)
+  data1$alcoholamt_outlier    <-ifelse(data1$alcohol_amt<=0|data1$alcohol_amt<777 & data1$alcohol_amt>50, 1, 0)
+  #changed this to >50 since the 7 category variable allows up to 45+
+  data1$alcoholstop_outlier   <-ifelse(data1$alcohol_stop<=0|data1$alcohol_stop<777 & data1$alcohol_stop>100, 1, 0)
+  data1$alcoholdur_outlier    <-ifelse(data1$alcohol_dur<=0|data1$alcohol_dur<777 & data1$alcohol_dur>50, 1, 0)
+  data1$smokingdur_outlier    <-ifelse(data1$smoking_dur<=0|data1$smoking_dur<777 & data1$smoking_dur>50, 1, 0)
+  data1$smokingamt_outlier    <-ifelse(data1$smoking_amt<=0|data1$smoking_amt<777 & data1$smoking_amt>60, 1, 0)
+  data1$smokingstop_outlier   <-ifelse(data1$smoking_stop<=0|data1$smoking_stop<777 & data1$smoking_stop>100, 1, 0)
+  data1$smokinginit_outlier   <-ifelse(data1$smoking_init<=0|data1$smoking_init<777 & data1$smoking_init>70, 1, 0)
+  data1$agemenarche_outlier   <-ifelse(data1$agemenarche<=0|data1$agemenarche<777 & data1$agemenarche>16, 1, 0)
+  
+  data1$agepreg1_outlier      <-ifelse(data1$age_preg1<12|data1$age_preg1<777 & data1$age_preg1>58, 1, 0)
+  data1$agepreg2_outlier      <-ifelse(data1$age_preg2<12|data1$age_preg2<777 & data1$age_preg2>58, 1, 0)
+  data1$agepreg3_outlier      <-ifelse(data1$age_preg3<12|data1$age_preg3<777 & data1$age_preg3>58, 1, 0)
+  data1$agepreg4_outlier      <-ifelse(data1$age_preg4<12|data1$age_preg4<777 & data1$age_preg4>58, 1, 0)
+  data1$agepreg5_outlier      <-ifelse(data1$age_preg5<12|data1$age_preg5<777 & data1$age_preg5>58, 1, 0)
+  data1$agepreg6_outlier      <-ifelse(data1$age_preg6<12|data1$age_preg6<777 & data1$age_preg6>58, 1, 0)
+  data1$agepreg7_outlier      <-ifelse(data1$age_preg7<12|data1$age_preg7<777 & data1$age_preg7>58, 1, 0)
+  data1$agepreg8_outlier      <-ifelse(data1$age_preg8<12|data1$age_preg8<777 & data1$age_preg8>58, 1, 0)
+  data1$agepreg9_outlier      <-ifelse(data1$age_preg9<12|data1$age_preg9<777 & data1$age_preg9>58, 1, 0)
+  data1$agepreg10_outlier     <-ifelse(data1$age_preg10<12|data1$age_preg10<777 & data1$age_preg10>58, 1, 0)
+  
+  data1$breastfddur1_outlier  <-ifelse(data1$breastfeed_dur_b1<=0|data1$breastfeed_dur_b1<777 & data1$breastfeed_dur_b1>24, 1, 0)
+  data1$breastfddur2_outlier  <-ifelse(data1$breastfeed_dur_b2<=0|data1$breastfeed_dur_b2<777 & data1$breastfeed_dur_b2>24, 1, 0)
+  data1$breastfddur3_outlier  <-ifelse(data1$breastfeed_dur_b3<=0|data1$breastfeed_dur_b3<777 & data1$breastfeed_dur_b3>24, 1, 0)
+  data1$breastfddur4_outlier  <-ifelse(data1$breastfeed_dur_b4<=0|data1$breastfeed_dur_b4<777 & data1$breastfeed_dur_b4>24, 1, 0)
+  data1$breastfddur5_outlier  <-ifelse(data1$breastfeed_dur_b5<=0|data1$breastfeed_dur_b5<777 & data1$breastfeed_dur_b5>24, 1, 0)
+  data1$breastfddur6_outlier  <-ifelse(data1$breastfeed_dur_b6<=0|data1$breastfeed_dur_b6<777 & data1$breastfeed_dur_b6>24, 1, 0)
+  data1$breastfddur7_outlier  <-ifelse(data1$breastfeed_dur_b7<=0|data1$breastfeed_dur_b7<777 & data1$breastfeed_dur_b7>24, 1, 0)
+  data1$breastfddur8_outlier  <-ifelse(data1$breastfeed_dur_b8<=0|data1$breastfeed_dur_b8<777 & data1$breastfeed_dur_b8>24, 1, 0)
+  data1$breastfddur9_outlier  <-ifelse(data1$breastfeed_dur_b9<=0|data1$breastfeed_dur_b9<777 & data1$breastfeed_dur_b9>24, 1, 0)
+  data1$breastfddur10_outlier <-ifelse(data1$breastfeed_dur_b10<=0|data1$breastfeed_dur_b10<777 & data1$breastfeed_dur_b10>24, 1, 0)
+  
+  data1$ocusedur_outlier      <-ifelse(data1$ocuse_dur<=0|data1$ocuse_dur<777 & data1$ocuse_dur>84, 1, 0)
+  data1$ocusestart_outlier    <-ifelse(data1$ocuse_start<16|data1$ocuse_start<777 & data1$ocuse_start>58, 1, 0)
+  data1$ocusestop_outlier     <-ifelse(data1$ocuse_stop<=0|data1$ocuse_stop<777 & data1$ocuse_stop>58, 1, 0)
+  data1$hrtdur_outlier        <-ifelse(data1$hrt_dur<=0|data1$hrt_dur<777 & data1$hrt_dur>24, 1, 0)
+  data1$hrtepdur_outlier      <-ifelse(data1$hrtep_dur<=0|data1$hrtep_dur<777 & data1$hrtep_dur>24, 1, 0)
+  data1$hrteonlydur_outlier   <-ifelse(data1$hrteonly_dur<=0|data1$hrteonly_dur<777 & data1$hrteonly_dur>24, 1, 0)
+  data1$pamets_outlier        <-ifelse(data1$pa_mets<=0|data1$pa_mets<777 & data1$pa_mets>30, 1, 0)
+  data1$papct_outlier         <-ifelse(data1$pa_pct<=0|data1$pa_pct<777 & data1$pa_pct>100, 1, 0)
+  
+  data1$sizeprimary1_outlier  <-ifelse(data1$size_primary1<=0|data1$size_primary1<777 & data1$size_primary1>100, 1, 0)
+  data1$sizeprimary2_outlier  <-ifelse(data1$size_primary2<=0|data1$size_primary2<777 & data1$size_primary2>100, 1, 0)
+  data1$ki67primary1_outlier  <-ifelse(data1$ki67_primary1<=0|data1$ki67_primary1<777 & data1$ki67_primary1>100, 1, 0)
+  data1$ki67primary2_outlier  <-ifelse(data1$ki67_primary2<=0|data1$ki67_primary2<777 & data1$ki67_primary2>100, 1, 0)
+  
+  
+  #All dates that were only years now set to 01-01-YYYY
+
+############################################################
+# Step 3. Create new variables for risk prediction modeling
+############################################################
+
+
+#New variable for hrt use
+#1 current, 2 former, 3 is ever (unsure)
+data1$hrt_use<-NA
+data1$hrt_use[which (data1$hrtuse==0)]<-1
+data1$hrt_use[which (data1$hrtuse==1)]<-2
+data1$hrt_use[which (data1$hrtuse==2)]<-3
+data1$hrt_use[which (data1$hrtuse==3)]<-4
+
+#Models:
+#Gail (BCRAT), CARE, APA (Gail), IBIS, BOADICEA, BWHS
+#Create variables based on data dictionary for models
+#NA for any outliers
+
+#1a. Age at menarche -Gail, CARE, AA- >=14, 12-13, <12
+#1b. Age at menarche- iCARE Lit & boadicea: <=10, 11, 12, 13, 14, 15, >=16
+#1c. Age at menarche BWHS- <14, >=14
+data1$age_menarche_cat3<-NA
+data1$age_menarche_cat3[which (data1$agemenarche>0 & data1$agemenarche<12)]<-1
+data1$age_menarche_cat3[which (data1$agemenarche>=12 & data1$agemenarche<14)]<-2
+data1$age_menarche_cat3[which (data1$agemenarche>=14 & data1$agemenarche<777)]<-3
+data1$age_menarche_cat3[which (data1$agemenarche_outlier==1)]<-NA
+
+data1$age_menarche_cat7<-NA
+data1$age_menarche_cat7[which (data1$agemenarche>0 &data1$agemenarche<10.5)]<-1 #<=10
+data1$age_menarche_cat7[which (data1$agemenarche>=10.5 & data1$agemenarche<11.5)]<-2 #11
+data1$age_menarche_cat7[which (data1$agemenarche>=11.5 & data1$agemenarche<12.5)]<-3
+data1$age_menarche_cat7[which (data1$agemenarche>=12.5 & data1$agemenarche<13.5)]<-4
+data1$age_menarche_cat7[which (data1$agemenarche>=13.5 & data1$agemenarche<14.5)]<-5
+data1$age_menarche_cat7[which (data1$agemenarche>=14.5 & data1$agemenarche<15.5)]<-6
+data1$age_menarche_cat7[which (data1$agemenarche>=15.5 & data1$agemenarche<777)]<-7
+data1$age_menarche_cat7[which (data1$agemenarche_outlier==1)]<-NA
+
+data1$age_menarche_cat2<-NA
+data1$age_menarche_cat2[which (data1$agemenarche>0 & data1$agemenarche<14)]<-1
+data1$age_menarche_cat2[which (data1$agemenarche>=14 & data1$agemenarche<777)]<-2
+data1$age_menarche_cat2[which (data1$agemenarche_outlier==1)]<-NA
+
+#2. Number of biopsies
+data1$biopsy_num<-NA
+data1$biopsy_num[which (data1$Biopsies_number!=888)]<-data1$Biopsies_number
+#No counts of biopsy #
+#change to 1 for those with yes no=1
+data1$biopsy_num[which (is.na(data1$biopsy_num) & data1$Biopsies_yesno==1)]<-1
+data1$biopsy_num[which (is.na(data1$biopsy_num) & data1$Biopsies_yesno==0)]<-0
+
+#3. Age (current)
+data1$age_ge50<-NA
+data1$age_ge50[which (data1$age<50)]<-0
+data1$age_ge50[which (data1$age>=50)]<-1
+data1$age_ge50[which (data1$age_outlier==1)]<-NA
+table(data1$age_ge50)
+
+#4. Age and biopsies combined - Gail/BCRAT
+data1$biopsy50<-NA
+data1$biopsy50[which (data1$biopsy_num==0 & data1$age_ge50==0)]<-1
+data1$biopsy50[which (data1$biopsy_num==1 & data1$age_ge50==0)]<-2
+data1$biopsy50[which (data1$biopsy_num==2 & data1$age_ge50==0)]<-3
+data1$biopsy50[which (data1$biopsy_num==0 & data1$age_ge50==1)]<-4
+data1$biopsy50[which (data1$biopsy_num==1 & data1$age_ge50==1)]<-5
+data1$biopsy50[which (data1$biopsy_num==2 & data1$age_ge50==1)]<-6
+
+#5. Age at first live birth
+
+data1$age_flb<-data1$age_preg1
+data1$age_flb[which (data1$age_flb==777)]<-NA
+data1$age_flb[which (data1$age_flb==888)]<-NA
+data1$age_flb[which (data1$age_preg1_outlier==1)]<-NA
+
+#for gail/aa/care/tyrercusick/
+
+data1$age_flb_cat5<-NA
+data1$age_flb_cat5[which (data1$parous==0)]<-1 #REF for TYRER CUSICK
+data1$age_flb_cat5[which (data1$age_flb>0 & data1$age_flb<20)]<-2
+data1$age_flb_cat5[which (data1$age_flb>=20 & data1$age_flb<25)]<-3
+data1$age_flb_cat5[which (data1$age_flb>=25 & data1$age_flb<30)]<-4
+data1$age_flb_cat5[which (data1$age_flb>=30)]<-5
+
+#for rosner
+data1$age_flb_cat4<-NA
+data1$age_flb_cat4[which (data1$parous==0)]<-1  #check if parous is the right variable here
+data1$age_flb_cat4[which (data1$age_flb>0 & data1$age_flb<25)]<-2 #REFERENCE
+data1$age_flb_cat4[which (data1$age_flb>=25 & data1$age_flb<30)]<-3
+data1$age_flb_cat4[which (data1$age_flb>=30)]<-4
+
+#for boadicea, iCARE- only among parous 
+data1$age_flb_parous<-NA
+data1$age_flb_parous[which (data1$age_flb>0 & data1$age_flb<20)]<-1 #REFERENCE
+data1$age_flb_parous[which (data1$age_flb>=20 & data1$age_flb<25)]<-2
+data1$age_flb_parous[which (data1$age_flb>=25 & data1$age_flb<30)]<-3
+data1$age_flb_parous[which (data1$age_flb>=30)]<-4
+
+#6. Relatives with bc
+
+#rosner
+data1$famhx_first<-NA
+data1$famhx_first[which (data1$fhx_fdr_brca==0)]<-0
+data1$famhx_first[which (data1$fhx_fdr_brca==1)]<-1
+
+#7. Age at first live birth and relatives combined
+#Gail/BCRAT, AA, CARE- combine age at first live birth and relative
+data1$ageflb_famhx<-NA
+data1$ageflb_famhx[which (data1$age_flb_cat5==1 & data1$famhx_first==0)]<-1
+data1$ageflb_famhx[which (data1$age_flb_cat5==1 & data1$famhx_first==1)]<-2
+data1$ageflb_famhx[which (data1$age_flb_cat5==2 & data1$famhx_first==0)]<-3 #REFERENCE
+data1$ageflb_famhx[which (data1$age_flb_cat5==2 & data1$famhx_first==1)]<-4
+data1$ageflb_famhx[which (data1$age_flb_cat5==3 & data1$famhx_first==0)]<-5
+data1$ageflb_famhx[which (data1$age_flb_cat5==3 & data1$famhx_first==1)]<-6
+data1$ageflb_famhx[which (data1$age_flb_cat5==4 & data1$famhx_first==0)]<-7
+data1$ageflb_famhx[which (data1$age_flb_cat5==4 & data1$famhx_first==1)]<-8
+data1$ageflb_famhx[which (data1$age_flb_cat5==5 & data1$famhx_first==0)]<-9
+data1$ageflb_famhx[which (data1$age_flb_cat5==5 & data1$famhx_first==1)]<-10
+
+#8. Atypical hyperplasia  #think about how to incorporate missing here
+
+table(data1$BBD_type1)
+table(data1$BBD_type2)
+table(data1$BBD_type3)
+table(data1$BBD_type1)
+data1$atyp_hyp<-NA
+data1$atyp_hyp<-ifelse((data1$BBD_type1==3 | data1$BBD_type2==3 | data1$BBD_type3==3 | data1$BBD_type4==3), 1, 0)
+#9. one biopsy, not atypical
+
+data1$biop_noatyp<-ifelse((data1$Biopsies_yesno==1 & data1$BBD_type1==1| data1$BBD_type1==2 |data1$BBD_type2==1| data1$BBD_type2==2| data1$BBD_type3==1| data1$BBD_type3==2 |data1$BBD_type4==1| data1$BBD_type4==2), 1,0)
+#unk. if they had no atypia since no BBD type reported- some of these had biopsy 
+
+#10. Duration of post menopause (for Rosner Cold.) at baseline
+data1$postmeno_dur<-data1$age-data1$meno_age
+data1$postmeno_dur[which (data1$meno_age==777)]<-0
+data1$postmeno_dur[which(data1$meno_age==888)]<-NA
+data1$postmeno_dur[which (data1$postmeno_dur<0)]<-0 # change to 0 if shouldn't be postmenopausal
+
+#data1check<-data1[which (data1$postmeno_dur<0),]
+#table(data1check$meno_age, data1check$age)
+#dim(data1check)
+#max(data1$postmeno_dur, na.rm=TRUE)
+#table(data1check$subject_id, data1check$meno_status)
+
+#11. Age group
+data1$age_cat1<-NA
+data1$age_cat1[which (data1$age>=45 & data1$age<50)]<-1
+data1$age_cat1[which (data1$age>=50 & data1$age<60)]<-2
+data1$age_cat1[which (data1$age_outlier==1)]<-NA
+
+data1$age_cat2<-NA
+data1$age_cat2[which (data1$age>=45 & data1$age<50)]<-1
+data1$age_cat2[which (data1$age>=50 & data1$age<55)]<-2
+data1$age_cat2[which (data1$age>=55 & data1$age<60)]<-3
+data1$age_cat2[which (data1$age>=60 & data1$age<65)]<-4
+data1$age_cat2[which (data1$age>=65 & data1$age<75)]<-5
+data1$age_cat2[which (data1$age_outlier==1)]<-NA
+
+#meno status
+data1$meno_stat<-NA
+data1$meno_stat[which (data1$meno_status==2|data1$meno_status==3)]<-1 #pre
+data1$meno_stat[which (data1$meno_status==1)]<-2 #post
+
+#Age & meno status combined (for rosner)
+data1$agemeno<-NA
+data1$agemeno[which (data1$meno_stat==1 & data1$age_cat1==1)]<-1 #pre, age 45-50 #REFERENCE
+data1$agemeno[which (data1$meno_stat==1 & data1$age_cat1==2)]<-2 #pre, <60
+data1$agemeno[which (data1$meno_stat==2 & data1$age_cat2==1)]<-3
+data1$agemeno[which (data1$meno_stat==2 & data1$age_cat2==2)]<-4
+data1$agemeno[which (data1$meno_stat==2 & data1$age_cat2==3)]<-5
+data1$agemeno[which (data1$meno_stat==2 & data1$age_cat2==4)]<-6
+
+#BMIcat 
+
+#icare, boadicea
+data1$bmi_cat4<-NA
+data1$bmi_cat4[which (data1$bmi>0 & data1$bmi<18.5)]<-1
+data1$bmi_cat4[which (data1$bmi>=18.5 & data1$bmi<25)]<-2
+data1$bmi_cat4[which (data1$bmi>=25 & data1$bmi<30)]<-3
+data1$bmi_cat4[which (data1$bmi>=30 & data1$bmi<888)]<-4
+data1$bmi_cat4[which (data1$bmi_outlier==1)]<-NA
+
+#TC
+data1$bmi_cat5<-NA
+data1$bmi_cat5[which (data1$bmi>0 & data1$bmi<21)]<-1
+data1$bmi_cat5[which (data1$bmi>=21 & data1$bmi<23)]<-2
+data1$bmi_cat5[which (data1$bmi>=23 & data1$bmi<25)]<-3
+data1$bmi_cat5[which (data1$bmi>=25 & data1$bmi<27)]<-4
+data1$bmi_cat5[which (data1$bmi>=27 & data1$bmi<888)]<-5
+data1$bmi_cat5[which (data1$bmi_outlier==1)]<-NA
+#BWHS - separately by pre and postmeno
+data1$bmi_cat2<-NA
+data1$bmi_cat2[which (data1$bmi>0 & data1$bmi<30)]<-1
+data1$bmi_cat2[which (data1$bmi>=30 & data1$bmi<888)]<-2
+data1$bmi_cat2[which (data1$bmi_outlier==1)]<-NA
+#BBD- for rosner
+max(data1$Biopsies_yesno)
+data1$bbd<-data1$Biopsies_yesno
+data1$bbd[which (data1$bbd==888)]<-NA
+
+#Biopsy info for TC
+data1$biopsy_cat3<-NA
+data1$biopsy_cat3[which (data1$Biopsies_yesno==0 | data1$BBD_type1==1)]<-1 #no prior biopsy/no proliferative disease
+data1$biopsy_cat3[which (data1$Biopsies_yesno==1 & data1$BBD_type1!=2)]<-2 #prior biopsy, result unknown
+data1$biopsy_cat3[which (data1$BBD_type1==2)]<-3 # hyperplasia (not atypia)
+
+#atypical
+#Current
+#rosner
+#assumes unknown past or current user is past user
+data1$pmh_type_cur<-NA
+data1$pmh_type_cur[which (data1$hrtuse==0 | data1$hrtuse==2)]<-1 #Not current, reference
+data1$pmh_type_cur[which (data1$hrtuse==1)]<-2 #Any current use, unknown e or p
+data1$pmh_type_cur[which (data1$hrtuse_eonly==1)]<-3 #E only
+data1$pmh_type_cur[which (data1$hrtuse_ep==1)]<-4 #EP
+
+#PMH type, any -TC
+#assumes unknown past or current user is past user
+data1$pmh_type_any<-NA
+data1$pmh_type_any[which (data1$hrtuse==0)]<-1 #Never user
+data1$pmh_type_any[which (data1$hrtuse==2 | data1$hrtuse==3)]<-2 #Past user,unk type
+data1$pmh_type_any[which ((data1$hrtuse==2 | data1$hrtuse==3) & (data1$hrtuse_eonly==2 | data1$hrtuse_eonly==3))]<-3 #Past user, E only
+data1$pmh_type_any[which ((data1$hrtuse==2 | data1$hrtuse==3) & (data1$hrtuse_ep==2 | data1$hrtuse_ep==3))]<-4 #Past user, EP
+data1$pmh_type_any[which (data1$pmh_type_cur==2)]<-5 #Current user, unknown type
+data1$pmh_type_any[which (data1$pmh_type_cur==3)]<-6 #Current user, E only
+data1$pmh_type_any[which (data1$pmh_type_cur==4)]<-7 #Current user, EP
+
+#Height
+data1$height_in<-NA
+data1$height_in<-(data1$height)/2.54
+data1$height_in[which (data1$height==888)]<-NA
+data1$height_in[which (data1$height_outlier==1)]<-NA
+max(data1$height_in, na.rm=TRUE)
+
+#Height, categories (TC)
+data1$height_cat3<-NA
+data1$height_cat3[which (data1$height>0 & data1$height<160)]<-1
+data1$height_cat3[which (data1$height>=160 & data1$height<170)]<-2
+data1$height_cat3[which (data1$height>=170 & data1$height<888)]<-3
+data1$height_cat3[which (data1$height_outlier==1)]<-NA
+
+#Alcohol-g
+data1$alc_gram_cat4<-NA
+data1$alc_gram_cat4[which (data1$alcohol_status==2|data1$alcohol_status==4)]<-1
+data1$alc_gram_cat4[which (data1$alchohol_amt>0 & data1$alcohol_amt<11)]<-2
+data1$alc_gram_cat4[which (data1$alcohol_amt>=11 & data1$alcohol_amt<22)]<-3
+data1$alc_gram_cat4[which (data1$alcohol_amt>=22 & data1$alc_gram_cat4<888)]<-4
+data1$alc_gram_cat4[which (data1$alcoholamt_outlier==1)]<-NA
+
+data1$alc_gram_cat7<-NA
+data1$alc_gram_cat7[which (data1$alcohol_status==2|data1$alcohol_status==4)]<-1
+data1$alc_gram_cat7[which (data1$alcohol_amt>0 & data1$alcohol_amt<5)]<-2
+data1$alc_gram_cat7[which (data1$alcohol_amt>=5 & data1$alcohol_amt<15)]<-3
+data1$alc_gram_cat7[which (data1$alcohol_amt>=15 & data1$alcohol_amt<25)]<-4
+data1$alc_gram_cat7[which (data1$alcohol_amt>=25 & data1$alcohol_amt<35)]<-5
+data1$alc_gram_cat7[which (data1$alcohol_amt>=35 & data1$alcohol_amt<45)]<-6
+data1$alc_gram_cat7[which (data1$alcohol_amt>=45 & data1$alcohol_amt<888)]<-7
+data1$alc_gram_cat7[which (data1$alcoholamt_outlier==1)]<-NA
+
+#OC use 
+data1$ocuse_cat<-NA
+data1$ocuse_cat[which (data1$ocuse_ever==0)]<-1
+data1$ocuse_cat[which (data1$ocuse_ever==1)]<-2
+data1$ocuse_cat[which (data1$ocuse_ever==1 & data1$ocuse_current==0)]<-3
+data1$ocuse_cat[which (data1$ocuse_current==1)]<-4
+
+#Incident breast cancer variable & Follow up time
+
+data1$bca_case<-NA
+data1$bca_case[which (data1$case==0)]<-0
+data1$bca_case[which (data1$case==1)]<-1
+data1$bca_case[which (data1$bca_case==7777)]<-NA
+data1$bca_case[which (data1$bca_case==8888)]<-NA
+data1$censor_date<-ifelse((data1$lastfup>0 & data1$lastfup!=7777 & data1$lastfup !=8888), data1$lastfup_date, NA)
+
+#change invasive so it is 0/1
+data1$bca_invasive<-NA
+data1$bca_invasive[which (data1$bca_case==1 & data1$invasive_primary1==1)]<-1
+data1$bca_invasive[which (data1$bca_case==1 & data1$invasive_primary1==2)]<-0 #insitu
+
+#replace variables that have 888 so I can summarize
+data1$agemenarche[which (data1$agemenarche>=777)]<-NA
+data1$parity[which (data1$parity>=777)]<-NA
+data1$meno_age[which (data1$meno_age>=777)]<-NA
+data1$bmi[which(data1$bmi>=777)]<-NA
+data1$bmi_earlyadult[which(data1$bmi_earlyadult>=777)]<-NA
+  
+  #######################
+  # Add labels
+  #######################
+  install.packages("expss")
+  library(expss)
+  data1=apply_labels(data1,
+                     bmi="BMI, kg/m2",
+                     bmi_earlyadult="BMI in early adulthood, kg/m2",
+                     agemenarche="Age at menarche, years",
+                     age_menarche_cat3="Age at menarche, Gail",
+                     age_menarche_cat3=c("NA"=NA,"<12"=1, "12-<14"=2, ">=14"=3),
+                     age_menarche_cat7="Age at menarche, iCARE BOAD",
+                     age_menarche_cat7=c("NA"=NA, "<10.5"=1, "10.5-<11.5"=2, "11.5-<12.5"=3, "12.5-<13.5"=4, "13.5-<14.5"=5, "14.5-<15.5"=6, "15.5-16"=7),
+                     age_menarche_cat2="Age at menarche, BWHS",
+                     age_menarche_cat2=c("NA"=NA, "<14"=1, "14-16"=2),
+                     biopsy_num="Number of biopsies",
+                     Biopsies_yesno="Had biopsy",
+                     age_ge50="Age >=50",
+                     age_ge50=c("NA"=NA, "<50"=0, ">=50-100"=1),
+                     biopsy50="Biopsy and age combined",
+                     biopsy50=c("NA"=NA, "0 biopsies, <50"=1, "1 biopsy, <50"=2,"2 biopsies, <50"=3,"0 biopises, >=50"=4,"1 biopsy, >=50"=5, "2 biopsies, >=50"),
+                     age_flb="Age at first pregnancy",
+                     age_flb_cat5="Age at first birth, Gail, TC",
+                     age_flb_cat5=c("NA"=NA, "Non-parous"=1, "<20"=2, "20-<25"=3, "25-<30"=4, "30-58"=5),
+                     age_flb_cat4="Age at first birth, Rosner",
+                     age_flb_cat4=c("NA"=NA, "Non-parous"=1, "<25"=2, "25-<30"=3, "30-58"=4),
+                     age_flb_parous="Age at first birth if parous, BOAD, iCARE",
+                     age_flb_parous=c("NA"=NA, "<20"=1, "20-<25"=2, "25-<30"=3, "30+"=4),
+                     famhx_first="First-degree family history of breast cancer",
+                     famhx_first=c("NA"=NA, "No"=0, "Yes"=1),
+                     ageflb_famhx="Age at first birth and famhx combined",
+                     ageflb_famhx=c("NA"=NA, "Nonparous, no famhx"=1, "Nonparous, yes famhx"=2, "<20, no famhx"=3, "<20, yes famhx"=4,"20-<25, no famhx"=5,"20-<25, yes famhx"=6, "25-<30 no famhx"=7, "25-<30, yes famhx"=8, "30+, no famhx"=9, "30+, yes famhx"=10),
+                     atyp_hyp="Atypical hyperplasia",
+                     atyp_hyp=c("NA"=NA, "No"=0, "Yes"=1),
+                     biop_noatyp="Had biopsy, but not atypia",
+                     biop_noatyp=c("NA"=NA, "No"=0, "Yes"=1),
+                     postmeno_dur="Duration of postmenopause in years",
+                     age_cat1="Age group, 45-60",
+                     age_cat1=c("NA"=NA,"45-<50"=1,"50-<60"=2),
+                     age_cat2="Age group, 45-75",
+                     age_cat2=c("NA"=NA,"45-<50"=1, "50-<55"=2, "55-<60"=3, "60-<65"=4, "65-<75"=5),
+                     meno_stat="Menopausal status pre post",
+                     meno_stat=c("NA"=NA,"Premenopausal"=1,"Postmenopausal"=2),
+                     meno_age="Age at menopause, years",
+                     agemeno="Age and menopausal status combined",
+                     agemeno=c("Pre, 45-<50"=1, "Pre, 50<60"=2,"Post, 45-<50"=3, "Post, 50-<55"=4, "Post, 55-<60"=5, "Post, 60-<65"=6),
+                     bmi_cat4="BMI categorical, iCARE, BOAD",
+                     bmi_cat4=c("NA"=NA, "<18.5"=1, "18.5-<25"=2, "25-<30"=3,"30-50"=4),
+                     bmi_cat5="BMI categorical, TC",
+                     bmi_cat5=c("NA"=NA, "<21"=1, "21-<23"=2, "23-<25"=3, "25-<27"=4, "27-50"=5),
+                     bmi_cat2="BMI under over 30, BWHS",
+                     bmi_cat2=c("NA"=NA, "<30"=1, "30-50"=2),
+                     bbd="BBD number, rosner",
+                     biopsy_cat3="Biopsy and BBD type, TC",
+                     biopsy_cat3=c("NA"=NA, "No biopsy or no proliferative disease"=1, "Prior biopsy, result unknown"=2,"Hyperplasia (not atypia)"),
+                     hrt_use="HRT use",
+                     hrt_use=c("NA"=NA, "Never use"=1, "Current use"=2, "Former use"=3, "Ever use (unk)"=4),
+                     pmh_type_cur="Type current PMH, Rosner",
+                     pmh_type_cur=c("NA"=NA, "None"=1, "Unknown type"=2,"Estrogen only"=3, "Combined"=4),
+                     pmh_type_any="Ever use and type PMH",
+                     pmh_type_any=c("NA"=NA, "Never"=1, "Past, unk type"=2, "Past, E only"=3, "Past, Combined"=4, "Current, unk type"=5, "Current, E only"=6, "Current, combined"=7),
+                     height="Height, cm",
+                     height_in="Height, in",
+                     height_cat3="Height categories, TC",
+                     height_cat3=c("NA"=NA, "0-<160cm"=1, "160-<170cm"=2, "170-200cm"=3),
+                     alc_gram_cat4="Alcohol grams, categorical",
+                     alc_gram_cat4=c("NA"=NA,"None"=1, "<11g"=2, "11-<22g"=3, "22-<50g"=4),
+                     alc_gram_cat7="Alcohol grams, 7 categories",
+                     alc_gram_cat7=c("NA"=NA, "None"=1, "<5"=2, "5-<15"=3, "15-<25"=4, "25-<35"=5, "35-<45"=6, "45-50"=7),
+                     ocuse_cat="OC use",
+                     ocuse_cat=c("NA"=NA,"Never"=1,"Ever, unk. past or current"=2, "Past"=3, "Current"=4),
+                     dxdate_primary1="Date of first primary dx",
+                     bca_case="Case status",
+                     bca_case=c("NA"=NA, "Non-case"=0, "Case"=1),
+                     censor_date="Date of censoring",
+                     bca_invasive="Invasive or in situ",
+                     bca_invasive=c("NA"=NA, "Invasive"=1, "In situ"=0),
+                     alcohol_status="Alcohol status",
+                     alcohol_status=c("Current"=1,"Former"=2,"Ever, unk. if current or former"=3, "Never"=4,"Missing"=888),
+                     smoking_status="Smoking status",
+                     smoking_status=c("Current"=1,"Former"=2,"Ever, unk. if current or former"=3, "Never"=4,"Missing"=888),
+                     meno_status="Menopausal status all",
+                     meno_status=c("Postmenopausal"=1, "Premenopausal"=2, "Perimenopausal/other"=3, "Missing"=888),
+                     ethnicity=c("NA"=NA, "Hispanic"=1, "Nonhispanic"=0),
+                     race=c("White"=1, "Black"=2, "Asian"=3,"Native Hawaiian/Pacific Islander"=4, "American Indian, Alaska Native"=5, "Other/multiracial"=6),
+                     parous=c("Nonparous"=0,"Parous"=1, "Missing"=888),
+                     bbd=c("No BBD"=0, "Yes BBD"=1, "NA"=NA))
+
+
+######################################
+# Step 4. Check variable distributions
+######################################
+
+#split data to look 
+#Create new vars for summaries without outliers
+
+data1$age_new<-data1$age
+data1$age_new[which (data1$age_outlier==1)]<-NA
+data1$agemenarche_new<-data1$agemenarche
+data1$agemenarche_new[which (data1$agemenarche_outlier==1)]<-NA
+data1$ageflb_new<-data1$age_flb
+data1$ageflb_new[which (data1$agepreg1_outlier==1)]<-NA
+data1$parity_new<-data1$parity
+data1$parity_new[which (data1$parity_outlier==1)]<-NA
+data1$bmi_new<-data1$bmi
+data1$bmi_new[which (data1$bmi_outlier==1)]<-NA
+data1$heightin_new<-data1$height_in
+data1$heightin_new[which (data1$height_outlier==1)]<-NA
+
+data1$bmi_earlyadult_new<-data1$bmi_earlyadult
+data1$bmi_earlyadult_new[which (data1$bmiearly_outlier==1)]<-NA
+
+data1_post<-data1[which (data1$meno_stat==2),]
+dim(data1_post)
+
+data1_continuous<-data1[c("age_new",
+                          "agemenarche_new",
+                          "biopsy_num",
+                          "ageflb_new",
+                          "parity_new",
+                          "postmeno_dur",
+                          "meno_age",
+                          "bmi_new",
+                          "heightin_new",
+                          "bmi_earlyadult_new","case")]
+
+
+data1_continuouspost<-data1_post[c("age_new",
+                                   "agemenarche_new",
+                                   "biopsy_num",
+                                   "ageflb_new",
+                                   "parity_new",
+                                   "postmeno_dur",
+                                   "meno_age",
+                                   "bmi_new",
+                                   "heightin_new",
+                                   "bmi_earlyadult_new","case")]
+
+data1_categories<-data1[c("smoking_status",
+                          "alcohol_status",
+                          "ethnicity",
+                          "sex",
+                          "race",
+                          "age_cat1",
+                          "age_cat2",
+                          "meno_stat",
+                          "meno_status",
+                          "agemeno",
+                          "bmi_cat2",
+                          "bmi_cat4",
+                          "bmi_cat5",
+                          "age_menarche_cat3",
+                          "age_menarche_cat7",
+                          "age_menarche_cat2",
+                          "age_ge50",
+                          "biopsy50",
+                          "parous",
+                          "age_flb_cat5",
+                          "age_flb_cat4",
+                          "age_flb_parous",
+                          "famhx_first",
+                          "ageflb_famhx",
+                          "atyp_hyp",
+                          "biop_noatyp",
+                          "bbd",
+                          "biopsy_cat3",
+                          "pmh_type_cur",
+                          "pmh_type_any",
+                          "height_cat3",
+                          "alc_gram_cat4",
+                          "alc_gram_cat7",
+                          "ocuse_cat","case")]
+
+
+data1_categoriespost<-data1_post[c("smoking_status",
+                                   "alcohol_status",
+                                   "ethnicity",
+                                   "sex",
+                                   "race",
+                                   "age_cat1",
+                                   "age_cat2",
+                                   "meno_stat",
+                                   "meno_status",
+                                   "agemeno",
+                                   "bmi_cat2",
+                                   "bmi_cat4",
+                                   "bmi_cat5",
+                                   "age_menarche_cat3",
+                                   "age_menarche_cat7",
+                                   "age_menarche_cat2",
+                                   "age_ge50",
+                                   "biopsy50",
+                                   "parous",
+                                   "age_flb_cat5",
+                                   "age_flb_cat4",
+                                   "age_flb_parous",
+                                   "famhx_first",
+                                   "ageflb_famhx",
+                                   "atyp_hyp",
+                                   "biop_noatyp",
+                                   "bbd",
+                                   "biopsy_cat3",
+                                   "pmh_type_cur",
+                                   "pmh_type_any",
+                                   "height_cat3",
+                                   "alc_gram_cat4",
+                                   "alc_gram_cat7",
+                                   "ocuse_cat","case")]
+
+
+continuous_summary<-cbind(min=apply(data1_continuous,2,min,na.rm=TRUE), median=apply(data1_continuous,2,median,na.rm=TRUE),max=apply(data1_continuous,2,max,na.rm=TRUE),IQR=apply(data1_continuous,2,IQR,na.rm=TRUE), mean=apply(data1_continuous,2,mean,na.rm=TRUE),sd=apply(data1_continuous,2,sd,na.rm=TRUE))
+continuous_summary_post<-cbind(min=apply(data1_continuouspost,2,min,na.rm=TRUE), median=apply(data1_continuouspost,2,median,na.rm=TRUE),max=apply(data1_continuouspost,2,max,na.rm=TRUE),IQR=apply(data1_continuouspost,2,IQR,na.rm=TRUE), mean=apply(data1_continuouspost,2,mean,na.rm=TRUE),sd=apply(data1_continuouspost, 2,sd,na.rm=TRUE))
+
+#These are the overall summaries
+continuous_summary
+continuous_summary_post
+
+#ALL individuals
+# 
+# ggplot(data1_continuous, aes(x=age_new))+ geom_histogram(binwidth=1,fill="lightblue")+labs(title="Age", x="Age",y="Frequency") 
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/age.png", width=3, height=4)
+# ggplot(data1_continuous, aes(x=agemenarche_new))+ geom_histogram(binwidth=1, fill="lightblue")+labs(title="Age at menarche", x="Age at menarche",y="Frequency") 
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/agemenarche.png", width=3, height=4)
+# #ggplot(data1_continuous, aes(x=biopsy_num))+ geom_histogram(binwidth=1, fill="lightblue")+labs(title="Biopsy num", x="Biopsy num",y="Frequency") 
+# ggplot(data1_continuous, aes(x=ageflb_new))+ geom_histogram(binwidth=1, fill="lightblue")+labs(title="Age at first birth", x="Age at first birth",y="Frequency") 
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/ageflb.png", width=3, height=4)
+# ggplot(data1_continuous, aes(x=parity_new))+ geom_histogram(binwidth=1, fill="lightblue")+labs(title="Parity", x="parity",y="Frequency") 
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/parity.png", width=3, height=4)
+# ggplot(data1_continuous, aes(x=bmi_new))+ geom_histogram(binwidth=1, fill="lightblue")+labs(title="BMI", x="BMI",y="Frequency") 
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/bmi.png", width=3, height=4)
+# ggplot(data1_continuous, aes(x=heightin_new))+ geom_histogram(binwidth=1, fill="lightblue")+labs(title="height inches", x="height",y="Frequency") 
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/heightin.png", width=3, height=4)
+# ggplot(data1_continuous, aes(x=bmi_earlyadult_new))+ geom_histogram(binwidth=1, fill="lightblue")+labs(title="bmi_earlyadult", x="bmi_earlyadult",y="Frequency") 
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/bmiearly.png", width=3, height=4)
+# 
+# #Look only among postmenopausal
+# ggplot(data1_continuouspost, aes(x=postmeno_dur))+ geom_histogram(binwidth=1, fill="lightblue")+labs(title="Postmeno dur", x="Postmeno dur",y="Frequency") 
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/postmenodur.png", width=3, height=4)
+# ggplot(data1_continuouspost, aes(x=meno_age))+ geom_histogram(binwidth=1, fill="lightblue")+labs(title="Age at menopause", x="Age at meno",y="Frequency") 
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/menoage.png", width=3, height=4)
+
+
+########################
+# Categorical data for all
+
+frequencies<-apply(data1_categories, 2, table)
+frequencies
+dim(data1_categories)
+
+tblFun <- function(x){
+  tbl <- table(x, useNA="always")
+  res <- cbind(tbl,round(prop.table(tbl)*100,2))
+  colnames(res) <- c('Count','Percentage')
+  res
+}
+
+#summaries overall
+summariescat<-lapply(data1_categories[1:35],tblFun)
+summariescat
+
+#Summaries for postmenopausal
+summariescat_post<-lapply(data1_categoriespost[1:35],tblFun)
+summariescat_post
+
+library(ggplot2)
+#Overall 
+# ggplot(data1_categories, aes(x=as.factor(smoking_status)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Smoking status")+xlab("Smoking status")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+#ggsave("C:/Users/krist/Dropbox/BCRP Project/smoking_status.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(alcohol_status)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Alcohol status")+xlab("Alcohol status")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/alcohol_status.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(ethnicity)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Ethnicity")+xlab("Ethnicity")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/ethnicity.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(race)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Race")+xlab("Race")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/race.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(meno_stat)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Menopausal status")+xlab("Menopausal status")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/menostat.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(bmi_cat5)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("BMI cat")+xlab("BMI cat")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/bmicat5.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(age_menarche_cat7)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Age menarche, cat")+xlab("Age menarche, cat")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/agemenarch_Cat.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(parous)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Parous")+xlab("Parous")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/parous.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(age_flb_cat5)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Age flb")+xlab("Age flb")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/ageflb_cat5.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(famhx_first)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Family history of BC")+xlab("Family history")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/famhx.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(ageflb_famhx)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Age at first birth and fam hx")+xlab("Age flb, famhx")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/ageflbfamhx.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(alc_gram_cat7)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Alcohol gram, cat")+xlab("Alcohol gram, cat")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/alccat.png", width=3, height=4)
+# ggplot(data1_categories, aes(x=as.factor(ocuse_cat)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("OC use")+xlab("OC use")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/ocuse.png", width=3, height=4)
+# #among post
+# ggplot(data1_categoriespost, aes(x=as.factor(pmh_type_cur)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Type of PMH")+xlab("Type of PMH")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/pmh.png", width=3, height=4)
+# ggplot(data1_categoriespost, aes(x=as.factor(pmh_type_any)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Type of PMH")+xlab("Type of PMH")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/pmh2.png", width=3, height=4)
+# #among post
+# ggplot(data1_categoriespost, aes(x=as.factor(agemeno)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Age and meno status combined")+xlab("Age and meno status combined")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+# #ggsave("C:/Users/krist/Dropbox/BCRP Project/agemenostat.png", width=3, height=4)
+#   
+  ##############################
+  # Follow-up information
+  ##############################
+  
+  data1$dxtofup<-data1$lastfup_date - data1$primary1dx_date
+  data1$dxtofup[data1$lastfup==8888]<-NA
+  data1$dxtofup[data1$dxdate_primary1==8888]<-NA
+  
+  data1$dxtofup<-(as.integer(data1$dxtofup)) / 365.25
+  
+  
+  data1$dxage<-NA
+  data1$dxage<-(data1$primary1dx_date-data1$birth_date)
+  data1$dxage[data1$dxdate_primary1==8888]<-NA
+  data1$dxage[data1$birth_year==8888]<-NA
+  
+  data1$dxage<-(as.integer(data1$dxage)) / 365.25
+  
+  mean(data1$dxage, na.rm=TRUE)
+  summary(data1$dxage, na.rm=TRUE)
+  
+  data1_case<-data1[which (data1$case==1 & !is.na(data1$case)),]
+  dim(data1_case)
+  #remove outliers
+  
+  data1_case$size_primary1_new<-data1_case$size_primary1
+  data1_case$size_primary1_new[which (data1_case$sizeprimary1_outlier==1)]<-NA
+  data1_case$ki67_primary1_new<-data1_case$ki67_primary1
+  data1_case$ki67_primary1_new[which (data1_case$ki67primary1_outlier==1)]<-NA
+  
+  
+  data1_case_cont<-data1_case[c("dxage", "dxtofup", "size_primary1_new", "ki67_primary1_new")]
+  data1_case_cat<-data1_case[c("stage_primary1", "grade_primary1", "sizecat_primary1","er_primary1","pr_primary1","her2_primary1","ki67cat_primary1")]
+  dim(data1_case_cat)
+  case_summary<-cbind(min=round(apply(data1_case_cont,2,min,na.rm=TRUE), digits=3), median=apply(data1_case_cont,2,median,na.rm=TRUE),max=apply(data1_case_cont,2,max,na.rm=TRUE),IQR=apply(data1_case_cont,2,IQR,na.rm=TRUE), mean=apply(data1_case_cont,2,mean,na.rm=TRUE),sd=apply(data1_case_cont,2,sd,na.rm=TRUE))
+  case_summary
+  frequencies_case<-apply(data1_case_cat, 2, table)
+  frequencies_case
+  
+  
+  tblFun <- function(x){
+    tbl <- table(x, useNA="always")
+    res <- cbind(tbl,round(prop.table(tbl)*100,2))
+    colnames(res) <- c('Count','Percentage')
+    res
+  }
+  
+  summaries3<-lapply(data1_case_cat[1:7],tblFun)
+  summaries3
+  
+###############################################################
+# Step 5. Set logRR for each model based on created variables
+###############################################################
+
+  #################
+  # GAIL
+  #################
+  
+  #Beta coefficients
+  data1$gail_agemenarch<-0
+  data1$gail_agemenarch[which (data1$age_menarche_cat3==1)]<-log(1)
+  data1$gail_agemenarch[which (data1$age_menarche_cat3==2)]<-log(1.099)
+  data1$gail_agemenarch[which (data1$age_menarche_cat3==3)]<-log(1.207)
+  
+  data1$gail_biopage<-0
+  data1$gail_biopage[which (data1$biopsy50==1)]<-log(1)
+  data1$gail_biopage[which (data1$biopsy50==2)]<-log(1.698)
+  data1$gail_biopage[which (data1$biopsy50==3)]<-log(2.882)
+  data1$gail_biopage[which (data1$biopsy50==4)]<-log(1)
+  data1$gail_biopage[which (data1$biopsy50==5)]<-log(1.273)
+  data1$gail_biopage[which (data1$biopsy50==6)]<-log(1.62)
+  
+  #age and relative combined
+  data1$ageflb_famhx<-NA
+  data1$ageflb_famhx[which (data1$age_flb_cat5==1 & data1$famhx_first==0)]<-1
+  data1$ageflb_famhx[which (data1$age_flb_cat5==1 & data1$famhx_first==1)]<-2
+  
+  data1$ageflb_famhx[which (data1$age_flb_cat5==2 & data1$famhx_first==0)]<-3 #REFERENCE
+  data1$ageflb_famhx[which (data1$age_flb_cat5==2 & data1$famhx_first==1)]<-4
+  
+  data1$ageflb_famhx[which (data1$age_flb_cat5==3 & data1$famhx_first==0)]<-5
+  data1$ageflb_famhx[which (data1$age_flb_cat5==3 & data1$famhx_first==1)]<-6
+  
+  data1$ageflb_famhx[which (data1$age_flb_cat5==4 & data1$famhx_first==0)]<-7
+  data1$ageflb_famhx[which (data1$age_flb_cat5==4 & data1$famhx_first==1)]<-8
+  
+  data1$ageflb_famhx[which (data1$age_flb_cat5==5 & data1$famhx_first==0)]<-9
+  data1$ageflb_famhx[which (data1$age_flb_cat5==5 & data1$famhx_first==1)]<-10
+  
+  data1$gail_agerel<-0
+  data1$gail_agerel[which (data1$ageflb_famhx==3)]<-log(1) #<20
+  data1$gail_agerel[which (data1$ageflb_famhx==4)]<-log(2.607) #don't have data on more than 1
+  
+  data1$gail_agerel[which (data1$ageflb_famhx==1)]<-log(1.548) #nulliparous
+  data1$gail_agerel[which (data1$ageflb_famhx==2)]<-log(2.756) #don't have data on more than 1
+  
+  data1$gail_agerel[which (data1$ageflb_famhx==5)]<-log(1.2444) #20-24
+  data1$gail_agerel[which (data1$ageflb_famhx==6)]<-log(2.681) 
+  
+  data1$gail_agerel[which (data1$ageflb_famhx==7)]<-log(1.548) #25-29
+  data1$gail_agerel[which (data1$ageflb_famhx==8)]<-log(2.756) 
+  
+  data1$gail_agerel[which (data1$ageflb_famhx==9)]<-log(1.927) #>30
+  data1$gail_agerel[which (data1$ageflb_famhx==10)]<-log(2.834) 
+  
+  data1$gail_atyphyper<-0
+  data1$gail_biopsy<-0
+  data1$gail_atyphyper[which (data1$atyp_hyp==1)]<-log(1.82)
+  data1$gail_biopsy[which (data1$biop_noatyp==1)]<-log(0.93)
+  
+  ##################
+  # CARE
+  ##################
+  
+  #Beta coefficients
+  data1$care_agemenarch<-0
+  data1$care_agemenarch[which (data1$age_menarche_cat3==1)]<-log(1)
+  data1$care_agemenarch[which (data1$age_menarche_cat3==2)]<-log(1.31)
+  data1$care_agemenarch[which (data1$age_menarche_cat3==3)]<-log(1.31)
+  
+  data1$care_biopage<-0
+  data1$care_biopage[which (data1$biopsy50==1)]<-log(1)
+  data1$care_biopage[which (data1$biopsy50==2)]<-log(1.2)
+  data1$care_biopage[which (data1$biopsy50==3)]<-log(1.44)
+  data1$care_biopage[which (data1$biopsy50==4)]<-log(1)
+  data1$care_biopage[which (data1$biopsy50==5)]<-log(1.07)
+  data1$care_biopage[which (data1$biopsy50==6)]<-log(1.15)
+  
+  #age and relative combined
+  data1$ageflb_famhx<-NA
+  data1$ageflb_famhx[which (data1$age_flb_cat5==1 & data1$famhx_first==0)]<-1
+  data1$ageflb_famhx[which (data1$age_flb_cat5==1 & data1$famhx_first==1)]<-2
+  data1$ageflb_famhx[which (data1$age_flb_cat5==2 & data1$famhx_first==0)]<-3 #REFERENCE
+  data1$ageflb_famhx[which (data1$age_flb_cat5==2 & data1$famhx_first==1)]<-4
+  data1$ageflb_famhx[which (data1$age_flb_cat5==3 & data1$famhx_first==0)]<-5
+  data1$ageflb_famhx[which (data1$age_flb_cat5==3 & data1$famhx_first==1)]<-6
+  data1$ageflb_famhx[which (data1$age_flb_cat5==4 & data1$famhx_first==0)]<-7
+  data1$ageflb_famhx[which (data1$age_flb_cat5==4 & data1$famhx_first==1)]<-8
+  data1$ageflb_famhx[which (data1$age_flb_cat5==5 & data1$famhx_first==0)]<-9
+  data1$ageflb_famhx[which (data1$age_flb_cat5==5 & data1$famhx_first==1)]<-10
+  
+  data1$care_agerel<-0
+  data1$care_agerel[which (data1$ageflb_famhx==3)]<-log(1)
+  data1$care_agerel[which (data1$ageflb_famhx==4)]<-log(1.61) #don't have data on more than 1
+  data1$care_agerel[which (data1$ageflb_famhx==1)]<-log(1)
+  data1$care_agerel[which (data1$ageflb_famhx==2)]<-log(2.61) #don't have data on more than 1
+  data1$care_agerel[which (data1$ageflb_famhx==5)]<-log(1)
+  data1$care_agerel[which (data1$ageflb_famhx==6)]<-log(1.61) 
+  data1$care_agerel[which (data1$ageflb_famhx==7)]<-log(1)
+  data1$care_agerel[which (data1$ageflb_famhx==8)]<-log(1.61) 
+  data1$care_agerel[which (data1$ageflb_famhx==9)]<-log(1)
+  data1$care_agerel[which (data1$ageflb_famhx==10)]<-log(1.61) 
+  
+  data1$care_atyphyper<-0
+  data1$care_biopsy<-0
+  data1$care_atyphyper[which (data1$atyp_hyp==1)]<-log(1.82)
+  data1$care_biopsy[which (data1$biop_noatyp==1)]<-log(0.93)
+  
+  #######################
+  # Asian American Model
+  #######################
+  
+  #Beta coefficients
+  data1$asian_agemenarch<-0
+  data1$asian_agemenarch[which (data1$age_menarche_cat3==1)]<-log(1)
+  data1$asian_agemenarch[which (data1$age_menarche_cat3==2)]<-log(1.078)
+  data1$asian_agemenarch[which (data1$age_menarche_cat3==3)]<-log(1.162)
+  
+  data1$asian_biopage<-0
+  data1$asian_biopage[which (data1$biopsy50==1)]<-log(1)
+  data1$asian_biopage[which (data1$biopsy50==2)]<-log(1.738)
+  data1$asian_biopage[which (data1$biopsy50==3)]<-log(3.02)
+  data1$asian_biopage[which (data1$biopsy50==4)]<-log(1)
+  data1$asian_biopage[which (data1$biopsy50==5)]<-log(1.738)
+  data1$asian_biopage[which (data1$biopsy50==6)]<-log(3.02)
+  
+  #age and relative combined
+  data1$ageflb_famhx<-NA
+  data1$ageflb_famhx[which (data1$age_flb_cat5==1 & data1$famhx_first==0)]<-1
+  data1$ageflb_famhx[which (data1$age_flb_cat5==1 & data1$famhx_first==1)]<-2
+  
+  data1$ageflb_famhx[which (data1$age_flb_cat5==2 & data1$famhx_first==0)]<-3 #REFERENCE
+  data1$ageflb_famhx[which (data1$age_flb_cat5==2 & data1$famhx_first==1)]<-4
+  
+  data1$ageflb_famhx[which (data1$age_flb_cat5==3 & data1$famhx_first==0)]<-5
+  data1$ageflb_famhx[which (data1$age_flb_cat5==3 & data1$famhx_first==1)]<-6
+  
+  data1$ageflb_famhx[which (data1$age_flb_cat5==4 & data1$famhx_first==0)]<-7
+  data1$ageflb_famhx[which (data1$age_flb_cat5==4 & data1$famhx_first==1)]<-8
+  
+  data1$ageflb_famhx[which (data1$age_flb_cat5==5 & data1$famhx_first==0)]<-9
+  data1$ageflb_famhx[which (data1$age_flb_cat5==5 & data1$famhx_first==1)]<-10
+  
+  table(data1$ageflb_famhx)
+  data1$asian_agerel<-0
+  data1$asian_agerel[which (data1$ageflb_famhx==3)]<-log(1) #<20
+  data1$asian_agerel[which (data1$ageflb_famhx==4)]<-log(2.207) #don't have data on more than 1
+  
+  data1$asian_agerel[which (data1$ageflb_famhx==1)]<-log(1.738) #nulliparous
+  data1$asian_agerel[which (data1$ageflb_famhx==2)]<-log(3.838) #don't have data on more than 1
+  
+  data1$asian_agerel[which (data1$ageflb_famhx==5)]<-log(1.318) #20-24
+  data1$asian_agerel[which (data1$ageflb_famhx==6)]<-log(2.91) 
+  
+  data1$asian_agerel[which (data1$ageflb_famhx==7)]<-log(1.738) #25-29
+  data1$asian_agerel[which (data1$ageflb_famhx==8)]<-log(3.837) 
+  
+  data1$asian_agerel[which (data1$ageflb_famhx==9)]<-log(2.291) #>30
+  data1$asian_agerel[which (data1$ageflb_famhx==10)]<-log(5.058) 
+  data1$asian_atyphyper<-0
+  data1$asian_biopsy<-0
+  data1$asian_atyphyper[which (data1$atyp_hyp==1)]<-log(1.82)
+  data1$asian_biopsy[which (data1$biop_noatyp==1)]<-log(0.93)
+
+  ####################
+  # BWHS
+  ####################
+  
+  data1$BWHS_agemenarch50<-0
+  data1$BWHS_agemenarch50[which (data1_black$age_menarche_cat2==1 & data1$age_ge50_new2==0)]<-log(1.37)
+  data1$BWHS_agemenarch50[which (data1_black$age_menarche_cat2==1 & data1$age_ge50_new2==1)]<-log(1)
+  data1$BWHS_agemenarch50[which (data1_black$age_menarche_cat2==2 & data1$age_ge50_new2==0)]<-log(1.08)
+  data1$BWHS_agemenarch50[which (data1_black$age_menarche_cat2==2 & data1$age_ge50_new2==1)]<-log(1)
+  summary(data1$BWHS_agemenarch50)
+  
+  data1$BWHS_famhx_age50<-0
+  data1$BWHS_famhx_age50[which (data1$age_ge50_new2==0 & data1$famhx_first_new2==0)]<-log(1)
+  data1$BWHS_famhx_age50[which (data1$age_ge50_new2==0 & data1$famhx_first_new2==1)]<-log(1.41) #choose as if relative was >=50 at dx
+  data1$BWHS_famhx_age50[which (data1$age_ge50_new2==1 & data1$famhx_first_new2==0)]<-log(1)
+  data1$BWHS_famhx_age50[which (data1$age_ge50_new2==1 & data1$famhx_first_new2==1)]<-log(1.53)
+  data1$BWHS_famhx_age50[which (is.na(data1$BWHS_famhx_age50))]<-0
+  
+  data1$ocuse_dur_new<-data1$ocuse_dur
+  data1$ocuse_dur_new<-ifelse(data1$ocuse_dur>=84, 0, data1$ocuse_dur) #set to 0 if at outlier
+  summary(data1$ocuse_dur_new)
+  
+  data1$BWHS_ocuse<-0
+  data1$BWHS_ocuse[which (data1$ocuse_dur_new<5 | data1$ocuse_cat==1)]<-log(1)
+  data1$BWHS_ocuse[which (data1$ocuse_dur_new>=5 & data1$ocuse_cat!=1)]<-log(1.15)
+  data1$BWHS_ocuse[which (is.na(data1$BWHSocuse))]<-0
+  
+  summary(data1$bmi_earlyadult_new)
+  data1$BWHS_bmi_young<-0
+  data1$BWHS_bmi_young[which (data1$bmi_earlyadult_new<25)]<-log(1.16)
+  data1$BWHS_bmi_young[which (data1$bmi_earlyadult_new>=25)]<-log(1)
+  data1$BWHS_bmi_young[which (is.na(data1$BWHS_bmi_young))]<-0
+  
+  
+  data1$BWHS_bmi<-0
+  data1$BWHS_bmi[which (data1$bmi_new<30 & data1$meno_stat==1)]<-log(1)
+  data1$BWHS_bmi[which (data1$bmi_new>=30 & data1$meno_stat==1)]<-log(0.96)
+  data1$BWHS_bmi[which (data1$bmi_new<30 & data1$meno_stat==2)]<-log(1)
+  data1$BWHS_bmi[which (data1$bmi_new>=30 & data1$meno_stat==2)]<-log(1.14)
+  data1$BWHS_bmi[which (is.na(data1$BWHS_bmi))]<-0
+  
+  data1$bbdorbiop<-NA
+  data1$bbdorbiop<-ifelse(data1$bbd==1|data1$biopsy_num>=1, 1,0)
+  
+  data1$BWHS_bbdbiopsy<-0
+  data1$BWHS_bbdbiopsy[which (data1$age_ge50_new2==0 & data1$bbdorbiop==1)]<-log(1.74)
+  data1$BWHS_bbdbiopsy[which (data1$age_ge50_new2==1 & data1$bbdorbiop==1)]<-log(1.16)
+  data1$BWHS_bbdbiopsy[which (is.na(data1$BWHS_bbdbiopsy))]<-0
+  
+  #############
+  # ROSNER
+  #############
+  
+  
+  #Beta coefficients
+  #age meno status
+  table(data1$agemeno)
+  data1$rosner_agemeno<-0
+  data1$rosner_agemeno[which (data1$agemeno==1)]<-log(1)
+  data1$rosner_agemeno[which (data1$agemeno==2)]<-log(1.27)
+  data1$rosner_agemeno[which (data1$agemeno==3)]<-log(0.28)
+  data1$rosner_agemeno[which (data1$agemeno==4)]<-log(0.43)
+  data1$rosner_agemeno[which (data1$agemeno==5)]<-log(0.58)
+  data1$rosner_agemeno[which (data1$agemeno==6)]<-log(0.83)
+  data1$rosner_agemeno[which (data1$agemeno==7)]<-log(0.98)
+  
+  summary(data1$rosner_agemeno)
+  #duration postmenopause
+  
+  data1$postmeno_dur_new<-data1$postmeno_dur
+  data1$postmeno_dur[which (is.na(data1$postmeno_dur))]<-0
+  
+  data1$rosner_postmeno_dur_new<-0
+  data1$rosner_postmeno_dur_new<-log(0.9676)*data1$postmeno_dur
+  
+  #age first birth
+  data1$rosner_agefb<-0
+  data1$rosner_agefb[which (data1$age_flb_cat4==1)]<-log(1.46)
+  data1$rosner_agefb[which (data1$age_flb_cat4==2)]<-log(1)
+  data1$rosner_agefb[which (data1$age_flb_cat4==3)]<-log(1.16)
+  data1$rosner_agefb[which (data1$age_flb_cat4==4)]<-log(1.33)
+  
+  # summary(data1$rosner_agefb)
+  #bbd confirmed
+  data1$rosner_bbd<-0
+  data1$rosner_bbd[which (data1$bbd==1)]<-log(1.37)
+  
+  data1$famhx_new<-data1$famhx_first
+  data1$famhx_new[which (is.na(data1$famhx_first))]<-0
+  
+  #fam hx
+  data1$rosner_famhx<-0
+  data1$rosner_famhx<-log(1.34)*data1$famhx_new
+  # summary(data1$rosner_famhx)
+  
+  #pmh use
+  data1$rosner_pmh<-0
+  data1$rosner_pmh[which (data1$pmh_type_cur==1)]<-log(1)
+  data1$rosner_pmh[which (data1$pmh_type_cur==2)]<-log(1.34)
+  data1$rosner_pmh[which (data1$pmh_type_cur==3)]<-log(1.22)
+  data1$rosner_pmh[which (data1$pmh_type_cur==4)]<-log(1.04)
+  data1$rosner_pmh[which (is.na(data1$rosner_pmh))]<-0
+  # summary(data1$rosner_pmh)
+  #BMI 
+  data1$rosner_bmi<-0
+  data1$rosner_bmi[which (data1$meno_stat==1)]<-log(0.985)*(data1$bmi_new[which (data1$meno_stat==1)]-25)
+  data1$rosner_bmi[which (data1$meno_stat==2)]<-log(1.017)*(data1$bmi_new[which (data1$meno_stat==2)]-25)
+  data1$rosner_bmi[which (is.na(data1$rosner_bmi))]<-0
+  #height
+  # summary(data1$rosner_bmi)
+  
+  data1$rosner_height<-0
+  data1$rosner_height<-log(1.034)*(data1$heightin_new-65)
+  data1$rosner_height[which (is.na(data1$rosner_height))]<-0
+  #alcohol
+  # summary(data1$rosner_height)
+  
+  data1$rosner_alcohol<-0
+  data1$rosner_alcohol[which (data1$alc_gram_cat4==1)]<-log(1)
+  data1$rosner_alcohol[which (data1$alc_gram_cat4==2)]<-log(1.09)
+  data1$rosner_alcohol[which (data1$alc_gram_cat4==3)]<-log(1.11)
+  data1$rosner_alcohol[which (data1$alc_gram_cat4==4)]<-log(1.22)
+  
+  #############
+  # iCARE
+  #############
+  #all split <50, >=50
+  #Beta coefficients
+  
+  data1$icare_agemenarch<-0
+  #same by age
+  data1$icare_agemenarch[which ( data1$age_menarche_cat7==1)]<-log(1.19)
+  data1$icare_agemenarch[which (data1$age_menarche_cat7==2)]<-log(1.09)
+  data1$icare_agemenarch[which (data1$age_menarche_cat7==3)]<-log(1.07)
+  data1$icare_agemenarch[which (data1$age_menarche_cat7==4)]<-log(1.0)
+  data1$icare_agemenarch[which (data1$age_menarche_cat7==5)]<-log(0.98)
+  data1$icare_agemenarch[which (data1$age_menarche_cat7==6)]<-log(0.92)
+  data1$icare_agemenarch[which (data1$age_menarche_cat7==7)]<-log(0.82)
+  data1$icare_agemenarch[which (is.na(data1$icare_agemenarch))]<-0
+  
+  #agemeno cat
+  data1$agemeno_cat<-NA
+  data1$agemeno_cat[which (data1$meno_age<40 & !is.na(data1$meno_age))]<-1
+  data1$agemeno_cat[which (data1$meno_age<45 & data1$meno_age>=40)]<-2
+  data1$agemeno_cat[which (data1$meno_age<50 & data1$meno_age>=40)]<-3
+  data1$agemeno_cat[which (data1$meno_age<55 & data1$meno_age>=40)]<-4
+  data1$agemeno_cat[which (data1$meno_age>=55 & !is.na(data1$meno_age))]<-5
+  
+  data1$icare_agemeno<-0
+  data1$icare_agemeno[which (data1$age_ge50_new2==1 & data1$agemeno_cat==1)]<-log(0.67)
+  data1$icare_agemeno[which (data1$age_ge50_new2==1 &data1$agemeno_cat==2)]<-log(0.73)
+  data1$icare_agemeno[which (data1$age_ge50_new2==1 &data1$agemeno_cat==3)]<-log(0.86)
+  data1$icare_agemeno[which (data1$age_ge50_new2==1 &data1$agemeno_cat==4)]<-log(1)
+  data1$icare_agemeno[which (data1$age_ge50_new2==1 &data1$agemeno_cat==5)]<-log(1.12)
+  data1$icare_agemeno[which (is.na(data1$icare_agemeno))]<-0
+  
+  data1$icare_parity<-0
+  data1$icare_parity[which (data1$parity_new==0)]<-log(1)
+  data1$icare_parity[which (data1$parity_new==1)]<-log(.87)
+  data1$icare_parity[which (data1$parity_new==2)]<-log(.81)
+  data1$icare_parity[which (data1$parity_new>=3)]<-log(.71)
+  data1$icare_parity[which (is.na(data1$icare_parity))]<-0
+
+  data1$icare_agefb<-0
+  data1$icare_agefb[which (data1$age_flb_parous==1)]<-log(1)
+  data1$icare_agefb[which (data1$age_flb_parous==2)]<-log(1.01)
+  data1$icare_agefb[which (data1$age_flb_parous==3)]<-log(1.11)
+  data1$icare_agefb[which (data1$age_flb_parous==4)]<-log(1.24)
+  data1$icare_agefb[which (is.na(data1$icare_agefb))]<-0
+  
+  data1$icare_ocuse<-0
+  data1$icare_ocuse[which (data1$ocuse_cat==1)]<-log(1)
+  data1$icare_ocuse[which (data1$ocuse_cat==2)]<-log(1.14)
+  data1$icare_ocuse[which (data1$age_ge50_new2==0 & data1$ocuse_cat==3)]<-log(1.12)
+  data1$icare_ocuse[which (data1$age_ge50_new2==0 & data1$ocuse_cat==4)]<-log(1.33)
+  data1$icare_ocuse[which (is.na(data1$icare_ocuse))]<-0
+  
+  data1$icare_bmi<-0
+  data1$icare_bmi[which (data1$age_ge50_new2==0 & data1$bmi_cat4==1)]<-log(1.28)
+  data1$icare_bmi[which (data1$age_ge50_new2==0 & data1$bmi_cat4==2)]<-log(1)
+  data1$icare_bmi[which (data1$age_ge50_new2==0 & data1$bmi_cat4==3)]<-log(0.92)
+  data1$icare_bmi[which (data1$age_ge50_new2==0 & data1$bmi_cat4==4)]<-log(0.74)
+  data1$icare_bmi[which (is.na(data1$icare_bmi))]<-0
+  data1$icare_height<-0
+  data1$icare_height<-log(1.016)
+  
+  data1$icare_alcohol<-0
+  data1$icare_alcohol[which (data1$alc_gram_cat7==1)]<-log(1)
+  data1$icare_alcohol[which (data1$alc_gram_cat7==2)]<-log(1.01)
+  data1$icare_alcohol[which (data1$alc_gram_cat7==3)]<-log(1.03)
+  data1$icare_alcohol[which (data1$alc_gram_cat7==4)]<-log(1.13)
+  data1$icare_alcohol[which (data1$alc_gram_cat7==5)]<-log(1.21)
+  data1$icare_alcohol[which (data1$alc_gram_cat7==6)]<-log(1.32)
+  data1$icare_alcohol[which (data1$alc_gram_cat7==7)]<-log(1.46)
+  data1$icare_alcohol[which (is.na(data1$icare_alcohol))]<-0
+  data1$icare_bbd<-0
+  data1$icare_bbd[which (data1$age_ge50_new2==0 & data1$bbd==1)]<-log(1.68)
+  data1$icare_bbd[which (data1$age_ge50_new2==1 & data1$bbd==1)]<-log(1.51)
+  data1$icare_bbd[which (is.na(data1$icare_bbd))]<-0
+  #BMI and hrt use
+  
+  data1$bmi_cat3<-NA
+  data1$bmi_cat3[which (data1$bmi_new<25)]<-1
+  data1$bmi_cat3[which (data1$bmi_new>=25 & data1$bmi_new<30)]<-2
+  data1$bmi_cat3[which (data1$bmi_new>=30)]<-3
+  
+  data1$icare_bmihrt<-0
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==1 & data1$bmi_cat3==1 )]<-log(1)
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==1 & data1$bmi_cat3==2 )]<-log(1.13)
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==1 & data1$bmi_cat3==3 )]<-log(1.25)
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==2 & data1$bmi_cat3==1 )]<-log(1)
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==2 & data1$bmi_cat3==2 )]<-log(1.13)
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==2 & data1$bmi_cat3==3 )]<-log(1.25)
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==3  & data1$bmi_cat3==1 )]<-log(2.19)
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==3  & data1$bmi_cat3==2 )]<-log(1.49)
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==3  & data1$bmi_cat3==3 )]<-log(1.45)
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==2 &  data1$bmi_cat3==1 )]<-log(1.57)
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==2 &  data1$bmi_cat3==2 )]<-log(1.49)
+  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==2 &  data1$bmi_cat3==3 )]<-log(1.45)
+  data1$icare_bmihrt[which (is.na(data1$icare_bmihrt))]<-0
+  
+  data1$heightnew<-data1$height
+  summary(data1$heightnew)
+  data1$heightnew[which (data1$height==888)]<-162.3
+  data1$heightnew[which (data1$height>200)]<-162.3
+  
+  ####################
+  # TYRER CUZICK
+  ####################
+  
+  data1$tyrer_agemenarch<-0
+  data1$tyrer_agemenarch<-log(0.95)
+  
+  data1$tyrer_agemeno<-0
+  data1$tyrer_agemeno[which (data1$meno_stat==1)]<-log(1)
+  data1$tyrer_agemeno[which (data1$meno_stat==2)]<-log(1.028)
+  data1$tyrer_agemeno[which (is.na(data1$tyrer_agemeno))]<-0
+  
+  summary(data1$tyrer_agemeno)
+  
+  data1$heightnew2<-data1$height
+  data1$heightnew2[which (data1$height>200)]<-160
+  
+  summary(data1$heightm)
+  data1$heightm<-data1$heightnew2/100
+  data1$heightmc<-data1$heightm-1.6
+  summary(data1$heightmc)
+  
+  data1$tyrer_height<-0
+  data1$tyrer_height[which (data1$height_cat3==1)]<-log(1)
+  data1$tyrer_height[which (data1$height_cat3==2)]<-log(1.05+2*data1$heightmc[which (data1$height_cat3==2)])
+  data1$tyrer_height[which (data1$height_cat3==3)]<-log(1.24)
+  data1$tyrer_height[which (is.na(data1$tyrer_height))]<-0
+  
+  data1$tyrer_agefb<-0
+  data1$tyrer_agefb[which (data1$age_flb_cat5==1)]<-log(1)
+  data1$tyrer_agefb[which (data1$age_flb_cat5==2)]<-log(.67)
+  data1$tyrer_agefb[which (data1$age_flb_cat5==3)]<-log(.74)
+  data1$tyrer_agefb[which (data1$age_flb_cat5==4)]<-log(.88)
+  data1$tyrer_agefb[which (data1$age_flb_cat5==5)]<-log(1.04)
+  data1$tyrer_agefb[which (is.na(data1$tyrer_agefb))]<-0
+  
+  data1$tyrer_bmimeno<-0
+  data1$tyrer_bmimeno[which (data1$meno_stat==1 & data1$bmi_cat5==1)]<-log(1)
+  data1$tyrer_bmimeno[which (data1$meno_stat==1 & data1$bmi_cat5==1)]<-log(1.14)
+  data1$tyrer_bmimeno[which (data1$meno_stat==1 & data1$bmi_cat5==1)]<-log(1.15)
+  data1$tyrer_bmimeno[which (data1$meno_stat==1 & data1$bmi_cat5==1)]<-log(1.26)
+  data1$tyrer_bmimeno[which (data1$meno_stat==1 & data1$bmi_cat5==1)]<-log(1.32)
+  data1$tyrer_bmimeno[which (is.na(data1$tyrer_bmimeno))]<-0
+  
+  table(data1$pmh_type_any)
+  data1$tyrer_hrtuse<-0
+  data1$tyrer_hrtuse[which(data1$pmh_type_any==1)]<-log(1) #Never
+  data1$tyrer_hrtuse[which (data1$pmh_type_any==2|data1$pmh_type_any==3|data1$pmh_type_any==4)]<-log(1) #Any past use; More or less than 5 years ago
+  data1$tyrer_hrtuse[which (data1$pmh_type_any==5| data1$pmh_type_any==6)]<-log(1.17) #Current use, unk type put in combined category
+  data1$tyrer_hrtuse[which (data1$pmh_type_any==7)]<-log(1.13) #Current use, unk type put in combined category
+  data1$tyrer_hrtuse[which (is.na(data1$tyrer_hrtuse))]<-0
+  
+  
+  data1$tyrer_biopage<-0
+  data1$tyrer_biopage[which (data1$Biopsies_yesno==0| (data1$Biopsies_yesno==1 & data1$BBD_type1==1))]<-log(1) #No prior biopsy/non proliferative disease - always ref
+  data1$tyrer_biopage[which (data1$age<30 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==888)]<-log(1.5) #Premeno age  #prior biopsy, result unk
+  data1$tyrer_biopage[which (data1$age<30 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==2)]<-log(2)     #Premeno age  #prior biopsy, hyperplasia not atypia
+  data1$tyrer_biopage[which (data1$age<30 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==3)]<-log(4.5)   #Premeno age #prior biopsy, atypical hyperplasia
+  data1$tyrer_biopage[which (data1$age>=30 & data1$age<40 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==888)]<-log(1.3) #Premeno age  #prior biopsy, result unk
+  data1$tyrer_biopage[which (data1$age>=30 & data1$age<40 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==2)]<-log(1.9)     #Premeno age  #prior biopsy, hyperplasia not atypia
+  data1$tyrer_biopage[which (data1$age>=30 & data1$age<40 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==3)]<-log(4.0)   #Premeno age  #prior biopsy, atypical hyperplasia
+  data1$tyrer_biopage[which (data1$age>=40 & data1$age<50 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==888)]<-log(1.26) #Premeno age #prior biopsy, result unk
+  data1$tyrer_biopage[which (data1$age>=40 & data1$age<50 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==2)]<-log(1.96)     #Premeno age #prior biopsy, hyperplasia not atypia
+  data1$tyrer_biopage[which (data1$age>=40 & data1$age<50 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==3)]<-log(3.96)   #Premeno age #prior biopsy, atypical hyperplasia
+  data1$tyrer_biopage[which (data1$age>=50 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==888)]<-log(1.31) #Premeno age  #prior biopsy, result unk
+  data1$tyrer_biopage[which (data1$age>=50 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==2)]<-log(2)     #Premeno age  #prior biopsy, hyperplasia not atypia
+  data1$tyrer_biopage[which (data1$age>=50 & data1$meno_stat==1 & data1$Biopsies_yesno==1 & data1$BBD_type1==3)]<-log(4.06)   #Premeno age #prior biopsy, atypical hyperplasia
+  data1$tyrer_biopage[which (data1$age<50 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==888)]<-log(0.96) #Postmeno age  #prior biopsy, result unk
+  data1$tyrer_biopage[which (data1$age<40 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==2)]<-log(1.48)     #Premeno age  #prior biopsy, hyperplasia not atypia
+  data1$tyrer_biopage[which (data1$age<40 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==3)]<-log(3.96)   #Premeno age  #prior biopsy, atypical hyperplasia
+  data1$tyrer_biopage[which (data1$age>=50 & data1$age<60 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==888)]<-log(1.13) #Postmeno age  #prior biopsy, result unk
+  data1$tyrer_biopage[which (data1$age>=50 & data1$age<60 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==2)]<-log(1.72)     #Premeno age  #prior biopsy, hyperplasia not atypia
+  data1$tyrer_biopage[which (data1$age>=50 & data1$age<60 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==3)]<-log(4.06)   #Premeno age  #prior biopsy, atypical hyperplasia
+  data1$tyrer_biopage[which (data1$age>=60 & data1$age<70 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==888)]<-log(1.28) #Postmeno age  #prior biopsy, result unk
+  data1$tyrer_biopage[which (data1$age>=60 & data1$age<70 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==2)]<-log(1.97)     #Premeno age  #prior biopsy, hyperplasia not atypia
+  data1$tyrer_biopage[which (data1$age>=60 & data1$age<70 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==3)]<-log(4.3)   #Premeno age  #prior biopsy, atypical hyperplasia
+  data1$tyrer_biopage[which (data1$age>=70 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==888)]<-log(1.3) #Postmeno age  #prior biopsy, result unk
+  data1$tyrer_biopage[which (data1$age>=70 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==2)]<-log(1.98)     #Premeno age  #prior biopsy, hyperplasia not atypia
+  data1$tyrer_biopage[which (data1$age>=70 & data1$meno_stat==2 & data1$Biopsies_yesno==1 & data1$BBD_type1==3)]<-log(4.6)   #Premeno age  #prior biopsy, atypical hyperplasia
+  
+  data1$tyrer_biopage[which (is.na(data1$tyrer_biopage))]<-0
+  
+  #Assume family history yes is mother having breast cancer at age 60
+  data1$tyrer_famhx<-0
+  data1$tyrer_famhx[which (data1$famhx_first_new2==1 & data1$meno_stat==1)]<-log(2.04)
+  data1$tyrer_famhx[which (data1$famhx_first_new2==1 & data1$meno_stat==2)]<-log(2.11)
+  
+  data1$agemenarche_new2<-data1$agemenarche
+  data1$agemenarche_new2[which (is.na(data1$agemenarche))]<-13 #make NAs for age menarche 13
+  summary(data1$meno_age)
+  data1$meno_age_new2<-data1$meno_age
+  data1$meno_age_new2[which (is.na(data1$meno_age))]<-0
+  
+  
+  #################
+  # BOADICEA
+  #################
+  
+  data1$boad_agemenarche<-0
+  data1$boad_agemenarche[which (data1$age<20)]<-1
+  data1$boad_agemenarche [which (data1$age>=20 & data1$age_menarche_cat7==1)]<-log(1)
+  data1$boad_agemenarche[which (data1$age>=20 & data1$age_menarche_cat7==2)]<-log(1.09)
+  data1$boad_agemenarche[which (data1$age>=20 & data1$age_menarche_cat7==3)]<-log(1.07)
+  data1$boad_agemenarche[which (data1$age>=20 & data1$age_menarche_cat7==4)]<-log(1)
+  data1$boad_agemenarche[which (data1$age>=20 & data1$age_menarche_cat7==5)]<-log(0.98)
+  data1$boad_agemenarche[which (data1$age>=20 & data1$age_menarche_cat7==6)]<-log(0.92)
+  data1$boad_agemenarche[which (data1$age>=20 & data1$age_menarche_cat7==7)]<-log(0.82)
+  data1$boad_agemenarche[which (is.na(data1$boad_agemenarche))]<-0
+  
+  summary(data1$meno_age)
+  
+  
+  data1$boad_agemeno<-0
+  data1$boad_agemeno[which (data1$meno_stat==1)]<-log(1)
+  data1$boad_agemeno[which (data1$meno_stat==2 & data1$meno_age_new2<40)]<-log(.67)
+  data1$boad_agemeno[which (data1$meno_stat==2 & data1$meno_age_new2>=40 & data1$meno_age_new2<45)]<-log(0.73)
+  data1$boad_agemeno[which (data1$meno_stat==2 & data1$meno_age_new2<45 & data1$meno_age_new2<50)]<-log(0.86)
+  data1$boad_agemeno[which (data1$meno_stat==2 & data1$meno_age_new2<50 & data1$meno_age_new2<55)]<-log(1)
+  data1$boad_agemeno[which (data1$meno_stat==2 & data1$meno_age_new2>=55)]<-log(1.12)
+  
+  
+  data1$boad_parity<-0
+  data1$boad_parity[which (data1$parous==0)]<-log(1)
+  data1$boad_parity[which (data1$age<20)]<-log(1)
+  data1$boad_parity[which (data1$age>=20 & data1$parity==1)]<-log(0.87)
+  data1$boad_parity[which (data1$age>=20 & data1$parity==2)]<-log(0.81)
+  data1$boad_parity[which (data1$age>=20 & data1$parity>2)]<-log(0.71)
+  data1$boad_parity[which (is.na(data1$boad_parity))]<-0
+  
+  
+  data1$boad_ageflb<-0
+  data1$boad_ageflb[which (data1$age<20)]<-log(1)
+  data1$boad_ageflb[which (data1$age>=20 & data1$parous==0)]<-log(1)
+  data1$boad_ageflb[which (data1$age>=20 & data1$age_flb_parous==1)]<-log(1)
+  data1$boad_ageflb[which (data1$age>=20 & data1$age_flb_parous==2)]<-log(1.01)
+  data1$boad_ageflb[which (data1$age>=20 & data1$age_flb_parous==3)]<-log(1.11)
+  data1$boad_ageflb[which (data1$age>=20 & data1$age_flb_parous==4)]<-log(1.24)
+  
+  data1$boad_ocuse<-0
+  data1$boad_ocuse[which (data1$ocuse_cat==1)]<-log(1)
+  data1$boad_ocuse[which (data1$age<50 & (data1$ocuse_cat==2| data1$ocuse_cat==3))]<-log(1.12)
+  data1$boad_ocuse[which (data1$age<50 & data1$ocuse_cat==4)]<-log(1.33)
+  data1$boad_ocuse[which (data1$age>=50 & (data1$ocuse_cat==2| data1$ocuse_cat==3 | data1$ocuse_cat==4))]<-log(1.12)
+  data1$boad_ocuse[which (is.na(data1$boad_ocuse))]<-0
+  
+  
+  data1$boad_pmh<-0
+  data1$boad_pmh[which (data1$meno_stat==1)]<-log(1)
+  data1$boad_pmh[which (data1$pmh_type_cur==1)]<-log(1)
+  data1$boad_pmh[which (data1$pmh_type_cur==3)]<-log(1.57) #current e type
+  data1$boad_pmh[which (data1$pmh_type_cur==2 | data1$pmh_type_cur==4)]<-log(2.19) #other type - put unk. and combined in this group
+  
+  data1$boad_bmi<-0
+  data1$boad_bmi[which (data1$age<20)]<-log(1)
+  data1$boad_bmi[which (data1$age>=20 & data1$age<50 & data1$bmi_cat4==1)]<-log(1.28)
+  data1$boad_bmi[which (data1$age>=20 & data1$age<50 & data1$bmi_cat4==2)]<-log(1)
+  data1$boad_bmi[which (data1$age>=20 & data1$age<50 & data1$bmi_cat4==3)]<-log(0.92)
+  data1$boad_bmi[which (data1$age>=20 & data1$age<50 & data1$bmi_cat4==4)]<-log(0.74)
+  data1$boad_bmi[which (data1$age>=50  & data1$bmi_cat4==1)]<-log(1)
+  data1$boad_bmi[which (data1$age>=50  & data1$bmi_cat4==2)]<-log(1)
+  data1$boad_bmi[which (data1$age>=50  & data1$bmi_cat4==3)]<-log(1.13)
+  data1$boad_bmi[which (data1$age>=50  & data1$bmi_cat4==4)]<-log(1.25)
+  
+  
+  data1$boad_height<-0
+  data1$boad_height[which (data1$age<20)]<-log(1)
+  data1$boad_height[which (data1$age>=20 & data1$heightnew2<153)]<-log(0.82)
+  data1$boad_height[which (data1$age>=20 & data1$heightnew2>=153 & data1$hheightnew2<159.65)]<-log(0.91)
+  data1$boad_height[which (data1$age>=20 & data1$heightnew2>=159.65 & data1$heightnew2<165.96)]<-log(1)
+  data1$boad_height[which (data1$age>=20 & data1$heightnew2>=165.96 & data1$heightnew2<172.7)]<-log(1.1)
+  data1$boad_height[which (data1$age>=20 & data1$heightnew2>=172.7)]<-log(1.22)
+  
+  
+  # table(data1$alc_gram_cat7)
+  
+  data1$boad_alc<-0
+  data1$boad_alc[which (data1$age<20)]<-log(1)
+  data1$boad_alc[which (data1$age>=20 & data1$alc_gram_cat7==1)]<-log(1)
+  data1$boad_alc[which (data1$age>=20 & data1$alc_gram_cat7==2)]<-log(1.01)
+  data1$boad_alc[which (data1$age>=20 & data1$alc_gram_cat7==3)]<-log(1.03)
+  data1$boad_alc[which (data1$age>=20 & data1$alc_gram_cat7==4)]<-log(1.13)
+  data1$boad_alc[which (data1$age>=20 & data1$alc_gram_cat7==5)]<-log(1.21)
+  data1$boad_alc[which (data1$age>=20 & data1$alc_gram_cat7==6)]<-log(1.32)
+  data1$boad_alc[which (data1$age>=20 & data1$alc_gram_cat7==7)]<-log(1.46)
+  data1$boad_alc[which (is.na(data1$boad_alc))]<-0
+  
+  data1$boad_famhx<-0
+  data1$boad_famhx[which (data1$famhx_first==0)]<-log(1)
+  data1$boad_famhx[which (data1$famhx_first==1)]<-log(1.7) #assume, mother dx at age 50 -- rr from Figure 2: https://www.nature.com/articles/s41436-018-0406-9 and Figure 1- compare 1.8 for QRFs only, 3.0 for QRFs with mom history
+  
+#################################################################
+# Step 6. Center log rel risk and create categories for analyses
+#################################################################
+  
+  data1$gail_logrel<-data1$gail_agemenarch+data1$gail_biopage+data1$gail_agerel+data1$gail_atyphyper+data1$gail_biopsy
+  #Center the logrel risk for comparisons
+  data1$gail_logrel_center<-data1$gail_logrel-mean(data1$gail_logrel)
+  data1$gail_rr<-exp(data1$gail_logrel_center)
+  
+  data1$care_logrel<-data1$care_agemenarch+data1$care_biopage+data1$care_agerel+data1$care_atyphyper+data1$care_biopsy
+  data1$BWHS_logrel<-data1$BWHS_agemenarch50+data1$BWHS_famhx_age50+data1$BWHS_ocuse+data1$BWHS_bmi_young+data1$BWHS_bmi+data1$BWHS_bbdbiopsy
+  
+  data1$asian_logrel<-data1$asian_agemenarch+data1$asian_biopage+data1$asian_agerel+data1$asian_atyphyper+data1$asian_biopsy
+  
+  data1$rosner_logrel<-data1$rosner_agemeno+data1$rosner_postmeno_dur_new+data1$rosner_bbd+data1$rosner_famhx+data1$rosner_pmh+data1$rosner_bmi+data1$rosner_height+data1$rosner_alcohol
+  data1$rosner_logrel_center<-data1$rosner_logrel-mean(data1$rosner_logrel)
+  data1$rosner_rr<-exp(data1$rosner_logrel_center)
+  
+  data1$icare_logrel<-NA
+  data1$icare_logrel<-data1$icare_agemenarch+data1$icare_agemeno+data1$icare_parity+ data1$icare_height*(data1$heightnew-162.3) +data1$icare_agefb+data1$icare_ocuse+data1$icare_bmi+data1$icare_alcohol+data1$icare_bbd+data1$icare_bmihrt
+  data1$icare_logrel_center<-data1$icare_logrel-mean(data1$icare_logrel)
+  data1$icare_rr<-exp(data1$icare_logrel_center)
+  
+  data1$tyrer_logrel<-(data1$tyrer_agemenarch*(data1$agemenarche_new2-13))+(data1$tyrer_agemeno*(data1$meno_age_new2-60))+ data1$tyrer_height+ data1$tyrer_agefb + data1$tyrer_bmimeno + data1$tyrer_hrtuse +
+  data1$tyrer_biopage+data1$tyrer_famhx
+  summary(data1$tyrer_logrel)
+  #Center the logrel risk for comparisons
+  data1$tyrer_logrel_center<-data1$tyrer_logrel-mean(data1$tyrer_logrel)
+  data1$tyrer_rr<-exp(data1$tyrer_logrel_center)
+  
+  data1$boad_logrel<-data1$boad_agemenarche+data1$boad_agemeno+ data1$boad_parity+ data1$boad_ageflb + data1$boad_ocuse + data1$boad_pmh +data1$boad_bmi+data1$boad_height+data1$boad_alc+data1$boad_famhx
+  #Center the logrel risk for comparisons
+  data1$boad_logrel_center<-data1$boad_logrel-mean(data1$boad_logrel)
+  data1$boad_rr<-exp(data1$boad_logrel_center)
+  
+  ######################
+  # RACE SPECIFIC MEANS
+  ######################
+  
+  data1_black<-data1[which (data1$race==2),]
+  #New Log RR and centered log RR based on only black participants
+  
+  #Gail- replace logrelcenter vars in black dataset
+  data1_black$gail_logrel_center<-data1_black$gail_logrel-mean(data1_black$gail_logrel)
+  data1_black$gail_rr<-exp(data1_black$gail_logrel_center)
+  #CARE
+  data1_black$care_logrel_center<-data1_black$care_logrel-mean(data1_black$care_logrel)
+  data1_black$care_rr<-exp(data1_black$care_logrel_center)
+  #BWHS
+  data1_black$BWHS_logrel_center<-data1_black$BWHS_logrel-mean(data1_black$BWHS_logrel)
+  data1_black$BWHS_rr<-exp(data1_black$BWHS_logrel_center)
+  #Rosner
+  data1_black$rosner_logrel_center<-data1_black$rosner_logrel-mean(data1_black$rosner_logrel)
+  data1_black$rosner_rr<-exp(data1_black$rosner_logrel_center)
+  #iCARE
+  data1_black$icare_logrel_center<-data1_black$icare_logrel-mean(data1_black$icare_logrel)
+  data1_black$icare_rr<-exp(data1_black$icare_logrel_center)
+  #TYRER
+  data1_black$tyrer_logrel_center<-data1_black$tyrer_logrel-mean(data1_black$tyrer_logrel)
+  data1_black$tyrer_rr<-exp(data1_black$tyrer_logrel_center)
+  #BOADICEA
+  data1_black$boad_logrel_center<-data1_black$boad_logrel-mean(data1_black$boad_logrel)
+  data1_black$boad_rr<-exp(data1_black$boad_logrel_center)
+
+    #Asian American
+    
+    data1_asian<-data1[which (data1$race==3),]
+    
+    #Gail
+    #Gail- replace logrelcenter vars in black dataset
+    data1_asian$gail_logrel_center<-data1_asian$gail_logrel-mean(data1_asian$gail_logrel)
+    data1_asian$gail_rr<-exp(data1_asian$gail_logrel_center)
+    #AA model
+    data1_asian$asian_logrel_center<-data1_asian$asian_logrel-mean(data1_asian$asian_logrel)
+    data1_asian$asian_rr<-exp(data1_asian$asian_logrel_center)
+    #Rosner
+    data1_asian$rosner_logrel_center<-data1_asian$rosner_logrel-mean(data1_asian$rosner_logrel)
+    data1_asian$rosner_rr<-exp(data1_asian$rosner_logrel_center)
+    #iCARE
+    data1_asian$icare_logrel_center<-data1_asian$icare_logrel-mean(data1_asian$icare_logrel)
+    data1_asian$icare_rr<-exp(data1_asian$icare_logrel_center)
+    #TYRER
+    data1_asian$tyrer_logrel_center<-data1_asian$tyrer_logrel-mean(data1_asian$tyrer_logrel)
+    data1_asian$tyrer_rr<-exp(data1_asian$tyrer_logrel_center)
+    #BOADICEA
+    data1_asian$boad_logrel_center<-data1_asian$boad_logrel-mean(data1_asian$boad_logrel)
+    data1_asian$boad_rr<-exp(data1_asian$boad_logrel_center)
+  
+  #####################
+  # Summary by model
+  #####################
+
+   ##########
+    # GAIL
+    ##########
+  
+    # summary(data1$gail_logrel_center)
+    # ggplot(data1, aes(x=gail_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, Gail", x="Log RR",y="Frequency") 
+    # #ggsave("C:/Users/krist/Dropbox/BCRP Project/gail_logrr.png", width=4, height=4)
+    # summary(data1$gail_rr)
+    # ggplot(data1, aes(x=gail_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, Gail", x="RR",y="Frequency") 
+    # #ggsave("C:/Users/krist/Dropbox/BCRP Project/gail_rr.png", width=4, height=4)
+    # 
+    # #############
+    # # ROSNER
+    # #############
+    # 
+    # summary(data1$rosner_logrel_center)
+    # ggplot(data1, aes(x=rosner_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, rosner", x="Log RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/rosner_logrr.png", width=4, height=4)
+    # summary(data1$rosner_rr)
+    # ggplot(data1, aes(x=rosner_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, rosner", x="RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/rosner_rr.png", width=4, height=4)
+    # 
+    # 
+    # ##################
+    # # iCARE
+    # ##################
+    # summary(data1$icare_logrel_center)
+    # ggplot(data1, aes(x=icare_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, icare", x="Log RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/icare_logrr.png", width=4, height=4)
+    # summary(data1$icare_rr)
+    # ggplot(data1, aes(x=icare_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, icare", x="RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/icare_rr.png", width=4, height=4)
+    # 
+    # #############
+    # # TYRER CUZICK
+    # ###############
+    # 
+    # summary(data1$tyrer_logrel_center)
+    # 
+    # ggplot(data1, aes(x=tyrer_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, tyrer", x="Log RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/tyrer_logrr.png", width=4, height=4)
+    # summary(data1$tyrer_rr)
+    # ggplot(data1, aes(x=tyrer_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, tyrer", x="RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/tyrer_rr.png", width=4, height=4)
+    # 
+    # #################
+    # # BOADICEA
+    # #################
+    # 
+    # summary(data1$boad_logrel_center)
+    # ggplot(data1, aes(x=boad_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, boad", x="Log RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/boad_logrr.png", width=4, height=4)
+    # summary(data1$boad_rr)
+    # ggplot(data1, aes(x=boad_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, boad", x="RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/boad_rr.png", width=4, height=4)
+    # 
+    # 
+    # #################
+    # #Summary by cohort
+    # #################
+    # data1nhs<-data1[which (data1$cohort=="NHS"),]
+    # data1nhs2<-data1[which (data1$cohort=="NHS2"),]
+    # data1plco<-data1[which (data1$cohort=="PLCO"),]
+    # 
+    # summary(data1nhs$gail_logrel_center, data1nhs$rosner_logrel_center, data1nhs$icare_logrel_center, data1nhs$boad_logrel_center)
+    # summary(data1nhs2$gail_logrel_center, data1nhs2$rosner_logrel_center, data1nhs2$icare_logrel_center, data1nhs2$boad_logrel_center)
+    # summary(data1plco$gail_logrel_center, data1plco$rosner_logrel_center, data1plco$icare_logrel_center, data1plco$boad_logrel_center)
+    # 
+    # summary(data1nhs$gail_rr, data1nhs$rosner_rr, data1nhs$icare_rr, data1nhs$boad_rr)
+    # summary(data1nhs2$gail_rr, data1nhs2$rosner_rr, data1nhs2$icare_rr, data1nhs2$boad_rr)
+    # summary(data1plco$gail_rr, data1plco$rosner_rr, data1plco$icare_rr, data1plco$boad_rr)
+    # 
+    # 
+    ##############
+    #CARE
+    ##############
+    
+    # summary(data1_black$care_rr)
+    # summary(data1_black$care_logrel_center)
+    # ggplot(data1_black, aes(x=care_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, care", x="Log RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/care_logrr.png", width=4, height=4)
+    # summary(data1_black$care_rr)
+    # ggplot(data1_black, aes(x=care_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, care", x="RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/care_rr.png", width=4, height=4)
+    # 
+    # ##################
+    # # BWHS
+    # ##################
+    # 
+    # summary(data1_black$BWHS_logrel_center)
+    # ggplot(data1_black, aes(x=BWHS_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, BWHS", x="Log RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/BWHS_logrr.png", width=4, height=4)
+    # summary(data1_black$BWHS_rr)
+    # ggplot(data1_black, aes(x=BWHS_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, BWHS", x="RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/BWHS_rr.png", width=4, height=4)
+    # 
+    ############
+    # By cohort
+    ############
+    
+    # data1nhs_black<-data1_black[which (data1_black$cohort=="NHS"),]
+    # data1nhs2_black<-data1_black[which (data1_black$cohort=="NHS2"),]
+    # data1plco_black<-data1_black[which (data1_black$cohort=="PLCO"),]
+    # 
+    # summary(data1_black$care_logrel_center)
+    # apply(data1_black, 2, )
+    # cbind(mean=apply(data1_black$BWHS_rr,1,mean,na.rm=TRUE),sd=apply(sample,1,sd,na.rm=TRUE))
+    # 
+    # data1_black_sum<- data1_black %>%
+    # dplyr::summarize(across(c("care_logrel_center", "BWHS_logrel_center", "care_rr", "BWHS_rr"), 
+    #                       list(min=min,
+    #                            median = median, 
+    #                            max = max,
+    #                            mean = mean, 
+    #                            sd = sd), na.rm=TRUE))
+    # 
+    ##############
+    #Asian American
+    ################
+    
+    # #Summarize only for Asian
+    # summary(data1_asian$asian_logrel_center)
+    # ggplot(data1_asian, aes(x=asian_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, asian", x="Log RR",y="Frequency") 
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/asian_logrr.png", width=4, height=4)
+    # summary(data1_asian$asian_rr)
+    # 
+    
+###############################################################
+# Step 8. Comparing relative risk distributions across cohorts
+###############################################################
+    
+    ######################
+    # Create rr categories
+    ######################
+    #GAIL
+    data1$gail_rr_cat<-NA
+    data1$gail_rr_cat[which (data1$gail_rr<0.5)]<-1 #low
+    data1$gail_rr_cat[which (data1$gail_rr>=0.5 & data1$gail_rr<1.5)]<-2
+    data1$gail_rr_cat[which (data1$gail_rr>=1.5)]<-3 #high
+    
+    data1_black$gail_rr_cat<-NA
+    data1_black$gail_rr_cat[which (data1_black$gail_rr<0.5)]<-1 #low
+    data1_black$gail_rr_cat[which (data1_black$gail_rr>=0.5 & data1_black$gail_rr<1.5)]<-2
+    data1_black$gail_rr_cat[which (data1_black$gail_rr>=1.5)]<-3 #high
+    
+    data1_asian$gail_rr_cat<-NA
+    data1_asian$gail_rr_cat[which (data1_asian$gail_rr<0.5)]<-1 #low
+    data1_asian$gail_rr_cat[which (data1_asian$gail_rr>=0.5 & data1_asian$gail_rr<1.5)]<-2
+    data1_asian$gail_rr_cat[which (data1_asian$gail_rr>=1.5)]<-3 #high
+  
+    #ROSNER
+  
+    data1$rosner_rr_cat<-NA
+    data1$rosner_rr_cat[which (data1$rosner_rr<0.5)]<-1 #low
+    data1$rosner_rr_cat[which (data1$rosner_rr>=0.5 & data1$rosner_rr<1.5)]<-2
+    data1$rosner_rr_cat[which (data1$rosner_rr>=1.5)]<-3 #high
+    
+    data1_black$rosner_rr_cat<-NA
+    data1_black$rosner_rr_cat[which (data1_black$rosner_rr<0.5)]<-1 #low
+    data1_black$rosner_rr_cat[which (data1_black$rosner_rr>=0.5 & data1_black$rosner_rr<1.5)]<-2
+    data1_black$rosner_rr_cat[which (data1_black$rosner_rr>=1.5)]<-3 #high
+    
+    data1_asian$rosner_rr_cat<-NA
+    data1_asian$rosner_rr_cat[which (data1_asian$rosner_rr<0.5)]<-1 #low
+    data1_asian$rosner_rr_cat[which (data1_asian$rosner_rr>=0.5 & data1_asian$rosner_rr<1.5)]<-2
+    data1_asian$rosner_rr_cat[which (data1_asian$rosner_rr>=1.5)]<-3 #high
+    
+    
+    #iCARE
+    
+    data1$icare_rr_cat<-NA
+    data1$icare_rr_cat[which (data1$icare_rr<0.5)]<-1 #low
+    data1$icare_rr_cat[which (data1$icare_rr>=0.5 & data1$icare_rr<1.5)]<-2
+    data1$icare_rr_cat[which (data1$icare_rr>=1.5)]<-3 #high
+    
+    data1_black$icare_rr_cat<-NA
+    data1_black$icare_rr_cat[which (data1_black$icare_rr<0.5)]<-1 #low
+    data1_black$icare_rr_cat[which (data1_black$icare_rr>=0.5 & data1_black$icare_rr<1.5)]<-2
+    data1_black$icare_rr_cat[which (data1_black$icare_rr>=1.5)]<-3 #high
+    
+    data1_asian$icare_rr_cat<-NA
+    data1_asian$icare_rr_cat[which (data1_asian$icare_rr<0.5)]<-1 #low
+    data1_asian$icare_rr_cat[which (data1_asian$icare_rr>=0.5 & data1_asian$icare_rr<1.5)]<-2
+    data1_asian$icare_rr_cat[which (data1_asian$icare_rr>=1.5)]<-3 #high
+    #TYRER
+    
+    data1$tyrer_rr_cat<-NA
+    data1$tyrer_rr_cat[which (data1$tyrer_rr<0.5)]<-1 #low
+    data1$tyrer_rr_cat[which (data1$tyrer_rr>=0.5 & data1$tyrer_rr<1.5)]<-2
+    data1$tyrer_rr_cat[which (data1$tyrer_rr>=1.5)]<-3 #high
+    
+    data1_black$tyrer_rr_cat<-NA
+    data1_black$tyrer_rr_cat[which (data1_black$tyrer_rr<0.5)]<-1 #low
+    data1_black$tyrer_rr_cat[which (data1_black$tyrer_rr>=0.5 & data1_black$tyrer_rr<1.5)]<-2
+    data1_black$tyrer_rr_cat[which (data1_black$tyrer_rr>=1.5)]<-3 #high
+    
+    data1_asian$tyrer_rr_cat<-NA
+    data1_asian$tyrer_rr_cat[which (data1_asian$tyrer_rr<0.5)]<-1 #low
+    data1_asian$tyrer_rr_cat[which (data1_asian$tyrer_rr>=0.5 & data1_asian$tyrer_rr<1.5)]<-2
+    data1_asian$tyrer_rr_cat[which (data1_asian$tyrer_rr>=1.5)]<-3 #high
+    
+    #BOADICEA
+    
+    data1$boad_rr_cat<-NA
+    data1$boad_rr_cat[which (data1$boad_rr<0.5)]<-1 #low
+    data1$boad_rr_cat[which (data1$boad_rr>=0.5 & data1$boad_rr<1.5)]<-2
+    data1$boad_rr_cat[which (data1$boad_rr>=1.5)]<-3 #high
+    
+    data1_black$boad_rr_cat<-NA
+    data1_black$boad_rr_cat[which (data1_black$boad_rr<0.5)]<-1 #low
+    data1_black$boad_rr_cat[which (data1_black$boad_rr>=0.5 & data1_black$boad_rr<1.5)]<-2
+    data1_black$boad_rr_cat[which (data1_black$boad_rr>=1.5)]<-3 #high
+    
+    data1_asian$boad_rr_cat<-NA
+    data1_asian$boad_rr_cat[which (data1_asian$boad_rr<0.5)]<-1 #low
+    data1_asian$boad_rr_cat[which (data1_asian$boad_rr>=0.5 & data1_asian$boad_rr<1.5)]<-2
+    data1_asian$boad_rr_cat[which (data1_asian$boad_rr>=1.5)]<-3 #high
+    
+    #CARE
+    data1_black$care_rr_cat<-NA
+    data1_black$care_rr_cat[which (data1_black$care_rr<0.5)]<-1 #low
+    data1_black$care_rr_cat[which (data1_black$care_rr>=0.5 & data1_black$care_rr<1.5)]<-2
+    data1_black$care_rr_cat[which (data1_black$care_rr>=1.5)]<-3 #high
+    
+    #BWHS
+    data1_black$BWHS_rr_cat<-NA
+    data1_black$BWHS_rr_cat[which (data1_black$BWHS_rr<0.5)]<-1 #low
+    data1_black$BWHS_rr_cat[which (data1_black$BWHS_rr>=0.5 & data1_black$BWHS_rr<1.5)]<-2
+    data1_black$BWHS_rr_cat[which (data1_black$BWHS_rr>=1.5)]<-3 #high
+    
+    
+    #Asian American
+    data1_asian$asian_rr_cat<-NA
+    data1_asian$asian_rr_cat[which (data1_asian$asian_rr<0.5)]<-1 #low
+    data1_asian$asian_rr_cat[which (data1_asian$asian_rr>=0.5 & data1$asian_rr<1.5)]<-2
+    data1_asian$asian_rr_cat[which (data1_asian$asian_rr>=1.5)]<-3 #high
+    
+    ##########################
+    #2 model Table comparisons
+    ##########################
+    table(data1$gail_rr_cat, data1$rosner_rr_cat, useNA="ifany")
+    table(data1$gail_rr_cat, data1$icare_rr_cat, useNA="ifany")
+    table(data1$gail_rr_cat, data1$tyrer_rr_cat, useNA="ifany")
+    table(data1$gail_rr_cat, data1$boad_rr_cat, useNA="ifany")
+    table(data1$rosner_rr_cat, data1$icare_rr_cat, useNA="ifany")
+    table(data1$rosner_rr_cat, data1$tyrer_rr_cat, useNA="ifany")
+    table(data1$rosner_rr_cat, data1$boad_rr_cat, useNA="ifany")
+    table(data1$icare_rr_cat, data1$boad_rr_cat, useNA="ifany")
+    #CARE and BWHS- in black participants only
+    table(data1_black$care_rr_cat, data1_black$BWHS_rr_cat, useNA="ifany")
+
+    
+    #Looking at agreement in rr by model
+    # ggplot(data1, aes(x=gail_rr, y=rosner_rr)) + geom_point()
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/gailvrosner.png", width=4, height=4)
+    # ggplot(data1, aes(x=gail_rr, y=tyrer_rr)) + geom_point()
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/gailvtyrer.png", width=4, height=4)
+    # ggplot(data1, aes(x=gail_rr, y=boad_rr)) + geom_point()
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/gailvboad.png", width=4, height=4)
+    # ggplot(data1, aes(x=gail_rr, y=icare_rr)) + geom_point()
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/gailvicare.png", width=4, height=4)
+    # ggplot(data1, aes(x=rosner_rr, y=icare_rr)) + geom_point()
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/rosnervicare.png", width=4, height=4)
+    # ggplot(data1, aes(x=rosner_rr, y=tyrer_rr)) + geom_point()
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/rosnervtyrer.png", width=4, height=4)
+    # ggplot(data1, aes(x=rosner_rr, y=boad_rr)) + geom_point()
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/rosnervboad.png", width=4, height=4)
+    # ggplot(data1, aes(x=icare_rr, y=tyrer_rr)) + geom_point()
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/icarevtyrer.png", width=4, height=4)
+    # ggplot(data1, aes(x=icare_rr, y=boad_rr)) + geom_point()
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/icarevboad.png", width=4, height=4)
+    # ggplot(data1, aes(x=tyrer_rr, y=boad_rr)) + geom_point()
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/tyrervboad.png", width=4, height=4)
+    # ggplot(data1_black, aes(x=care_rr, y=BWHS_rr)) + geom_point()
+    # ggsave("C:/Users/krist/Dropbox/BCRP Project/carevbwhs.png", width=4, height=4)
+    
+    
+    ######################
+    # Agreement statistics
+    #######################
+    
+      ################
+      #1. Fleiss Kappa
+      ################
+      install.packages("irr")
+      library("irr")
+      #1. Fleiss Kappa
+    
+      #column should be rater
+      #row should be individual with the rating
+      
+      #compare among all
+      include<-c("subject_id","gail_rr_cat","rosner_rr_cat","icare_rr_cat","tyrer_rr_cat","boad_rr_cat")
+      data_rrcat<-data1[,(names(data1) %in% include)]
+      include2<-c("subject_id","gail_rr","rosner_rr","icare_rr","tyrer_rr","boad_rr")
+      data_rrcont<-data1[,(names(data1) %in% include2)]
+      head(data_rrcont)
+      dim(data_rrcat)
+      #Compare for black participants only
+      include3<-c("gail_rr_cat","rosner_rr_cat","icare_rr_cat","tyrer_rr_cat","boad_rr_cat", "BWHS_rr_cat","care_rr_cat")
+      data_black_rrcat<-data1_black[,(names(data1_black) %in% include3)]
+      head(data_black_rrcat)
+      
+      include4<- c("gail_rr","rosner_rr","icare_rr","tyrer_rr","boad_rr","BWHS_rr", "care_rr")
+      data_black_rrcont<-data1_black[,(names(data1_black) %in% include4)]
+      dim(data_rrcat)
+      head(data_rrcat)
+      
+      ##THIS IS WHERE MEMORY IS AN ISSUE
+      kappa_all<- kappam.fleiss(data_rrcat)
+      ###
+      kappa_all
+      # kappa_all<-kappam.fleiss(data_rrcat[1:10000,])
+     
+      dim(data_black_rrcat)
+      kappa_black<-kappam.fleiss(data_black_rrcat)
+      kappa_black
+      #8911 subjects- comparing just CARE and BWHS (2 raters): Kappa=-0.0315, p=0.0029
+
+      #Fleiss' Kappa for m Raters
+      
+      #Subjects = 8911 
+      #Raters = 7 
+      #Kappa = 0.0834 
+      
+      #z = 39.9 
+      #p-value = 0 
+      
+      #################
+      # ENTROPY
+      #################
+      
+      #2. Entropy
+      
+      #Compare all
+      #take data rrcat, for each row (1) use the following function for x. Here the function for x is 
+      #finding the length which x=1. 
+      data_rrcat$ncat1<-apply(data_rrcat, 1, function(x) length(which(x==1)))
+      data_rrcat$ncat2<-apply(data_rrcat, 1, function(x) length(which(x==2)))
+      data_rrcat$ncat3<-apply(data_rrcat, 1, function(x) length(which(x==3)))
+      
+      data_rrcat$ncat1pct<-data_rrcat$ncat1/5
+      data_rrcat$ncat2pct<-data_rrcat$ncat2/5
+      data_rrcat$ncat3pct<-data_rrcat$ncat3/5
+      
+      data_rrcat$ncat1pct[which (is.na(data_rrcat$ncat1pct))]<-0
+      data_rrcat$ncat2pct[which (is.na(data_rrcat$ncat2pct))]<-0
+      data_rrcat$ncat3pct[which (is.na(data_rrcat$ncat3pct))]<-0
+      
+      data_rrcat$logpct1<-log(data_rrcat$ncat1pct)
+      data_rrcat$logpct2<-log(data_rrcat$ncat2pct)
+      data_rrcat$logpct3<-log(data_rrcat$ncat3pct)
+      
+      data_rrcat$logpct1[which (data_rrcat$ncat1pct==0)]<-0
+      data_rrcat$logpct2[which (data_rrcat$ncat2pct==0)]<-0
+      data_rrcat$logpct3[which (data_rrcat$ncat3pct==0)]<-0
+      
+      data_rrcat$H<-(data_rrcat$ncat1pct*data_rrcat$logpct1)+(data_rrcat$ncat2pct*data_rrcat$logpct2)+(data_rrcat$ncat3pct*data_rrcat$logpct3)
+      
+      mean(data_rrcat$H)
+      summary(data_rrcat$H)
+      head(data_rrcat)
+      
+      #> summary(data_rrcat$H)
+      #   Min.   1st Qu.  Median  Mean    3rd Qu.    Max. 
+      #-1.0995 -0.5004   0.0000   -0.2320  0.0000  0.0000 
+      sd(data_rrcat$H)
+      #0.2833561
+      
+      #####################
+      #All black comparison
+      #####################
+      
+      data_black_rrcat$ncat1<-apply(data_black_rrcat, 1, function(x) length(which(x==1)))
+      #take data rrcat, for each row (1) use the following function for x. Here the function for x is 
+      #finding the length which x=1. 
+      data_black_rrcat$ncat2<-apply(data_black_rrcat, 1, function(x) length(which(x==2)))
+      data_black_rrcat$ncat3<-apply(data_black_rrcat, 1, function(x) length(which(x==3)))
+      
+      head(data_black_rrcat)
+      data_black_rrcat$ncat1pct<-data_black_rrcat$ncat1/7
+      data_black_rrcat$ncat2pct<-data_black_rrcat$ncat2/7
+      data_black_rrcat$ncat3pct<-data_black_rrcat$ncat3/7
+      
+      data_black_rrcat$ncat1pct[which (is.na(data_black_rrcat$ncat1pct))]<-0
+      data_black_rrcat$ncat2pct[which (is.na(data_black_rrcat$ncat2pct))]<-0
+      data_black_rrcat$ncat3pct[which (is.na(data_black_rrcat$ncat3pct))]<-0
+      
+      mean(data_black_rrcat$ncat1pct)
+      mean(data_black_rrcat$ncat2pct)
+      mean(data_black_rrcat$ncat3pct)
+      
+      data_black_rrcat$logpct1<-log(data_black_rrcat$ncat1pct)
+      data_black_rrcat$logpct2<-log(data_black_rrcat$ncat2pct)
+      data_black_rrcat$logpct3<-log(data_black_rrcat$ncat3pct)
+      
+      data_black_rrcat$logpct1[which (data_black_rrcat$ncat1pct==0)]<-0
+      data_black_rrcat$logpct2[which (data_black_rrcat$ncat2pct==0)]<-0
+      data_black_rrcat$logpct3[which (data_black_rrcat$ncat3pct==0)]<-0
+      
+      data_black_rrcat$H<-(data_black_rrcat$ncat1pct*data_black_rrcat$logpct1)+(data_black_rrcat$ncat2pct*data_black_rrcat$logpct2)+(data_black_rrcat$ncat3pct*data_black_rrcat$logpct3)
+      
+      mean(data_black_rrcat$H)
+      sd(data_black_rrcat$H)
+      summary(data_black_rrcat$H)
+  
+      
+      
