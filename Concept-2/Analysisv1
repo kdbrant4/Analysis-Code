@@ -2017,6 +2017,264 @@ library(ggplot2)
       mean(data_black_rrcat$H)
       sd(data_black_rrcat$H)
       summary(data_black_rrcat$H)
+
+      ##############
+      #3. Distance from agreement 
+      ##############
+      
+      #Let v_j=(v_j1,...,v_j5), where v_jk is the log RR for subject j for model k. 
+      #Then the distance is sqrt(t(a) %*% a), where a = v - s*(t(v) %*% s)/(t(s) %*% s) and s = c(1,1,1,1,1). 
+      #a is v-average(v) 
+      #Does not require categorization. Measures how far the actual log RRs are from perfect agreement (where all 5 models give the same results) on a continuous scale.
+      
+
+      new=v %*% s
+      dim(new)
+      new5=new/5
+      dim(new5)
+      
+      v<-as.matrix(data_logrrcont[,2:6])
+      dim(v)
+      #314062 5
+      t(v)
+      dim(t(v)) #5*314062 
+      s<-c(1,1,1,1,1)
+      
+      data_logrrcont$sum<-data_logrrcont$gail_logrel_center+data_logrrcont$rosner_logrel_center+data_logrrcont$icare_logrel_center+data_logrrcont$tyrer_logrel_center+data_logrrcont$boad_logrel_center
+      data_logrrcont$div<-data_logrrcont$sum/5
+      v2<-as.matrix(data_logrrcont[,"div"])
+      head(v2)
+      v3<-cbind(v2, v2, v2, v2, v2)
+      head(v3)
+
+      #a is the difference by individual
+      a=v-v3
+      head(a)
+      head(a)
+      dim(a)
+      
+      d1=(t(a) %*% a)
+      d1
+      dim(d1) #5x5 matrix
   
+      
+      d2=sqrt(d1)
+      #m*n matrix by n*p matrix
+      #Not sure this is the right output... 
+      
+      head(d2)
+      #                           gail_logrel_center rosner_logrel_center icare_logrel_center tyrer_logrel_center boad_logrel_center
+      # gail_logrel_center            127.63754             94.31355            34.74440            84.06595           29.63044
+      # rosner_logrel_center           94.31355            165.61061            85.81012            88.11348          137.59520
+      # icare_logrel_center            34.74440             85.81012            95.38859            42.97838           36.31401
+      # tyrer_logrel_center            84.06595             88.11348            42.97838           133.79730          129.42750
+      # boad_logrel_center             29.63044            137.59520            36.31401           129.42750          182.99521
+      
+      #########################
+      #4. table summarizing pairwise model concordance
+      #Rows: Model 1, …, Model 5. Columns: Model 1, … Model 5.
+      #Upper diagonal: Cohen’s kappa (for low/med/high risk categorization)
+      #Lower diagonal: Rank correlation.
+      ###########################
+      
+      #Cohen's kappa
+      
+      compare1<-cbind(data1$gail_rr_cat, data1$rosner_rr_cat)
+      compare2<-cbind(data1$gail_rr_cat, data1$icare_rr_cat)
+      compare3<-cbind(data1$gail_rr_cat, data1$tyrer_rr_cat)
+      compare4<-cbind(data1$gail_rr_cat, data1$boad_rr_cat)
+      compare5<-cbind(data1$rosner_rr_cat, data1$icare_rr_cat)
+      compare6<-cbind(data1$rosner_rr_cat, data1$tyrer_rr_cat)
+      compare7<-cbind(data1$rosner_rr_cat, data1$boad_rr_cat)
+      compare8<-cbind(data1$icare_rr_cat, data1$tyrer_rr_cat)
+      compare9<-cbind(data1$icare_rr_cat, data1$boad_rr_cat)
+      compare10<-cbind(data1$tyrer_rr_cat, data1$boad_rr_cat)
+      
+      
+      install.packages("psych")
+      library("psych")
+      
+      kappa1<-cohen.kappa(compare1)
+      kappa2<-cohen.kappa(compare2)
+      kappa3<-cohen.kappa(compare3)
+      kappa4<-cohen.kappa(compare4)
+      kappa5<-cohen.kappa(compare5)
+      kappa6<-cohen.kappa(compare6)
+      kappa7<-cohen.kappa(compare7)
+      kappa8<-cohen.kappa(compare8)
+      kappa9<-cohen.kappa(compare9)
+      kappa10<-cohen.kappa(compare10)
+      
+      kappapull= function(x){
+        result<-matrix(NA,nrow=1, ncol=4)
+        result[1,1]<-x$weighted.kappa
+        result[1,2]<-var<-x$var.weighted
+        result[1,3]<- lci<-x$confid[2,1]
+        result[1,4]<- rci<-x$confid[2,3]
+        return(result)
+      }
+       dat1<-kappapull(kappa1)
+       dat2<-kappapull(kappa2)
+       dat3<-kappapull(kappa3)
+       dat4<-kappapull(kappa4)
+       dat5<-kappapull(kappa5)
+       dat6<-kappapull(kappa6)
+       dat7<-kappapull(kappa7)
+       dat8<-kappapull(kappa8)
+       dat9<-kappapull(kappa9)
+       dat10<-kappapull(kappa10)
+       
+       #print table
+       
+       kappatable<-as.data.frame(rbind(dat1, dat2, dat3, dat4, dat5, dat6, dat7, dat8, dat9, dat10))
+       names(kappatable)<-c("kappa","var","lci","rci")
+       rownames(kappatable)<-c("gail.v.rosner", "gail.v.icare","gail.v.tyrer","gail.v.boad","rosner.v.icare","rosner.v.tyrer","rosner.v.boad","icare.v.tyrer","icare.v.boad","tyrer.v.boad")
+       
+       write.csv(kappatable,"C:/Users/krist/Dropbox/BCRP Project/kappatable.csv")
+       kappatable
+       
+      #Rank correlation
+      rankcor1<-cor(data1$gail_rr_cat, data1$rosner_rr_cat, method="spearman")
+      rankcor2<-cor(data1$gail_rr_cat, data1$icare_rr_cat, method="spearman")
+      rankcor3<-cor(data1$gail_rr_cat, data1$tyrer_rr_cat, method="spearman")
+      rankcor4<-cor(data1$gail_rr_cat, data1$boad_rr_cat, method="spearman")
+      rankcor5<-cor(data1$rosner_rr_cat, data1$icare_rr_cat, method="spearman")
+      rankcor6<-cor(data1$rosner_rr_cat, data1$tyrer_rr_cat, method="spearman")
+      rankcor7<-cor(data1$rosner_rr_cat, data1$boad_rr_cat, method="spearman")
+      rankcor8<-cor(data1$icare_rr_cat, data1$tyrer_rr_cat, method="spearman")
+      rankcor9<-cor(data1$icare_rr_cat, data1$boad_rr_cat, method="spearman")
+      rankcor10<-cor(data1$tyrer_rr_cat, data1$boad_rr_cat, method="spearman")
+      
+      #As table
+      rankcor<-as.data.frame(rbind(rankcor1, rankcor2, rankcor3, rankcor4, rankcor5, rankcor6, rankcor7, rankcor8, rankcor9, rankcor10))
+      names(rankcor)<-c("spearman cor")
+      rownames(rankcor)<-c("gail.v.rosner", "gail.v.icare","gail.v.tyrer","gail.v.boad","rosner.v.icare","rosner.v.tyrer","rosner.v.boad","icare.v.tyrer","icare.v.boad","tyrer.v.boad")
+      write.csv(rankcor,"C:/Users/krist/Dropbox/BCRP Project/rankcorrtable.csv")
+      
+      
+      #############################
+      #Repeat - black participants
+      
+      #Cohen's kappa
+      
+      bcompare1<-cbind(data_black_rrcat$gail_rr_cat, data_black_rrcat$rosner_rr_cat)
+      bcompare2<-cbind(data_black_rrcat$gail_rr_cat, data_black_rrcat$icare_rr_cat)
+      bcompare3<-cbind(data_black_rrcat$gail_rr_cat, data_black_rrcat$tyrer_rr_cat)
+      bcompare4<-cbind(data_black_rrcat$gail_rr_cat, data_black_rrcat$boad_rr_cat)
+      bcompare5<-cbind(data_black_rrcat$gail_rr_cat, data_black_rrcat$care_rr_cat)
+      bcompare6<-cbind(data_black_rrcat$gail_rr_cat, data_black_rrcat$BWHS_rr_cat)
+      
+      bcompare7<-cbind(data_black_rrcat$rosner_rr_cat, data_black_rrcat$icare_rr_cat)
+      bcompare8<-cbind(data_black_rrcat$rosner_rr_cat, data_black_rrcat$tyrer_rr_cat)
+      bcompare9<-cbind(data_black_rrcat$rosner_rr_cat, data_black_rrcat$boad_rr_cat)
+      bcompare10<-cbind(data_black_rrcat$rosner_rr_cat, data_black_rrcat$care_rr_cat)
+      bcompare11<-cbind(data_black_rrcat$rosner_rr_cat, data_black_rrcat$BWHS_rr_cat)
+      
+      bcompare12<-cbind(data_black_rrcat$icare_rr_cat, data_black_rrcat$tyrer_rr_cat)
+      bcompare13<-cbind(data_black_rrcat$icare_rr_cat, data_black_rrcat$boad_rr_cat)
+      bcompare14<-cbind(data_black_rrcat$icare_rr_cat, data_black_rrcat$care_rr_cat)
+      bcompare15<-cbind(data_black_rrcat$icare_rr_cat, data_black_rrcat$BWHS_rr_cat)
+      bcompare16<-cbind(data_black_rrcat$tyrer_rr_cat, data_black_rrcat$boad_rr_cat)
+      bcompare17<-cbind(data_black_rrcat$tyrer_rr_cat, data_black_rrcat$care_rr_cat)
+      bcompare18<-cbind(data_black_rrcat$tyrer_rr_cat, data_black_rrcat$BWHS_rr_cat)
+      bcompare19<-cbind(data_black_rrcat$boad_rr_cat, data_black_rrcat$care_rr_cat)
+      bcompare20<-cbind(data_black_rrcat$boad_rr_cat, data_black_rrcat$BWHS_rr_cat)
+      bcompare21<-cbind(data_black_rrcat$care_rr_cat, data_black_rrcat$BWHS_rr_cat)
+
+      bkappa1<-cohen.kappa(bcompare1)
+      bkappa2<-cohen.kappa(bcompare2)
+      bkappa3<-cohen.kappa(bcompare3)
+      bkappa4<-cohen.kappa(bcompare4)
+      bkappa5<-cohen.kappa(bcompare5)
+      bkappa6<-cohen.kappa(bcompare6)
+      bkappa7<-cohen.kappa(bcompare7)
+      bkappa8<-cohen.kappa(bcompare8)
+      bkappa9<-cohen.kappa(bcompare9)
+      bkappa10<-cohen.kappa(bcompare10)
+      bkappa11<-cohen.kappa(bcompare11)
+      bkappa12<-cohen.kappa(bcompare12)
+      bkappa13<-cohen.kappa(bcompare13)
+      bkappa14<-cohen.kappa(bcompare14)
+      bkappa15<-cohen.kappa(bcompare15)
+      bkappa16<-cohen.kappa(bcompare16)
+      bkappa17<-cohen.kappa(bcompare17)
+      bkappa18<-cohen.kappa(bcompare18)
+      bkappa19<-cohen.kappa(bcompare19)
+      bkappa20<-cohen.kappa(bcompare20)
+      bkappa21<-cohen.kappa(bcompare21)
+      
+      kappapull= function(x){
+        result<-matrix(NA,nrow=1, ncol=4)
+        result[1,1]<-x$weighted.kappa
+        result[1,2]<-var<-x$var.weighted
+        result[1,3]<- lci<-x$confid[2,1]
+        result[1,4]<- rci<-x$confid[2,3]
+        return(result)
+      }
+      dat1<-kappapull(bkappa1)
+      dat2<-kappapull(bkappa2)
+      dat3<-kappapull(bkappa3)
+      dat4<-kappapull(bkappa4)
+      dat5<-kappapull(bkappa5)
+      dat6<-kappapull(bkappa6)
+      dat7<-kappapull(bkappa7)
+      dat8<-kappapull(bkappa8)
+      dat9<-kappapull(bkappa9)
+      dat10<-kappapull(bkappa10)
+      dat11<-kappapull(bkappa11)
+      dat12<-kappapull(bkappa12)
+      dat13<-kappapull(bkappa13)
+      dat14<-kappapull(bkappa14)
+      dat15<-kappapull(bkappa15)
+      dat16<-kappapull(bkappa16)
+      dat17<-kappapull(bkappa17)
+      dat18<-kappapull(bkappa18)
+      dat19<-kappapull(bkappa19)
+      dat20<-kappapull(bkappa20)
+      dat21<-kappapull(bkappa21)
+      
+      #print table
+      
+      bkappatable<-as.data.frame(rbind(dat1, dat2, dat3, dat4, dat5, dat6, dat7, dat8, dat9, dat10,dat11, dat12, dat13, dat14, dat15, dat16, dat17,dat18, dat19,dat20,dat21))
+      names(bkappatable)<-c("kappa","var","lci","rci")
+      rownames(bkappatable)<-c("gail.v.rosner", "gail.v.icare","gail.v.tyrer","gail.v.boad","gail.v.care","gail.v.bwhs","rosner.v.icare","rosner.v.tyrer","rosner.v.boad","rosner.v.care","rosner.v.bwhs","icare.v.tyrer","icare.v.boad","icare.v.care","icare.v.bwhs",
+                           "tyrer.v.boad","tyrer.v.care","tyrer.v.bwhs","boad.v.care","boad.v.bwhs","care.v.bwhs")
+      write.csv(bkappatable,"C:/Users/krist/Dropbox/BCRP Project/kappatable_black.csv")
+  
+      #Rank correlation
+      brankcor1<-cor(data_black_rrcat$gail_rr_cat, data_black_rrcat$rosner_rr_cat, method="spearman")
+      brankcor2<-cor(data_black_rrcat$gail_rr_cat, data_black_rrcat$icare_rr_cat, method="spearman")
+      brankcor3<-cor(data_black_rrcat$gail_rr_cat, data_black_rrcat$tyrer_rr_cat, method="spearman")
+      brankcor4<-cor(data_black_rrcat$gail_rr_cat, data_black_rrcat$boad_rr_cat, method="spearman")
+      brankcor5<-cor(data_black_rrcat$gail_rr_cat, data_black_rrcat$care_rr_cat, method="spearman")
+      brankcor6<-cor(data_black_rrcat$gail_rr_cat, data_black_rrcat$BWHS_rr_cat, method="spearman")
+      
+      brankcor7<-cor(data_black_rrcat$rosner_rr_cat, data_black_rrcat$icare_rr_cat, method="spearman")
+      brankcor8<-cor(data_black_rrcat$rosner_rr_cat, data_black_rrcat$tyrer_rr_cat, method="spearman")
+      brankcor9<-cor(data_black_rrcat$rosner_rr_cat, data_black_rrcat$boad_rr_cat, method="spearman")
+      brankcor10<-cor(data_black_rrcat$rosner_rr_cat, data_black_rrcat$care_rr_cat, method="spearman")
+      brankcor11<-cor(data_black_rrcat$rosner_rr_cat, data_black_rrcat$BWHS_rr_cat, method="spearman")
+      
+      brankcor12<-cor(data_black_rrcat$icare_rr_cat, data_black_rrcat$tyrer_rr_cat, method="spearman")
+      brankcor13<-cor(data_black_rrcat$icare_rr_cat, data_black_rrcat$boad_rr_cat, method="spearman")
+      brankcor14<-cor(data_black_rrcat$icare_rr_cat, data_black_rrcat$care_rr_cat, method="spearman")
+      brankcor15<-cor(data_black_rrcat$icare_rr_cat, data_black_rrcat$BWHS_rr_cat, method="spearman")
+      brankcor16<-cor(data_black_rrcat$tyrer_rr_cat, data_black_rrcat$boad_rr_cat, method="spearman")
+      brankcor17<-cor(data_black_rrcat$tyrer_rr_cat, data_black_rrcat$care_rr_cat, method="spearman")
+      brankcor18<-cor(data_black_rrcat$tyrer_rr_cat, data_black_rrcat$BWHS_rr_cat, method="spearman")
+      brankcor19<-cor(data_black_rrcat$boad_rr_cat, data_black_rrcat$care_rr_cat, method="spearman")
+      brankcor20<-cor(data_black_rrcat$boad_rr_cat, data_black_rrcat$BWHS_rr_cat, method="spearman")
+      brankcor21<-cor(data_black_rrcat$care_rr_cat, data_black_rrcat$BWHS_rr_cat, method="spearman")
+      
+      #As table
+      brankcor<-as.data.frame(rbind(brankcor1,brankcor2, brankcor3, brankcor4, brankcor5, brankcor6, brankcor7, brankcor8, brankcor9, brankcor10, brankcor11,
+                                   brankcor12, brankcor13, brankcor14, brankcor15, brankcor16, brankcor17, brankcor18, brankcor19, brankcor20, brankcor21))
+      head(brankcor)
+      names(brankcor)<-c("spearman cor")
+      rownames(brankcor)<-c("gail.v.rosner", "gail.v.icare","gail.v.tyrer","gail.v.boad","gail.v.care","gail.v.bwhs","rosner.v.icare","rosner.v.tyrer","rosner.v.boad","rosner.v.care","rosner.v.bwhs","icare.v.tyrer","icare.v.boad","icare.v.care","icare.v.bwhs",
+                                "tyrer.v.boad","tyrer.v.care","tyrer.v.bwhs","boad.v.care","boad.v.bwhs","care.v.bwhs")
+      write.csv(brankcor,"C:/Users/krist/Dropbox/BCRP Project/rankcorrtable_black.csv")
+      
+      
       
       
