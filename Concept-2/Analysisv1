@@ -363,15 +363,16 @@ table(data1$age_ge50)
 
 #4. Age and biopsies combined - Gail/BCRAT
 data1$biopsy50<-NA
+table(data1$biopsy_num, data1$age_ge50)
 data1$biopsy50[which (data1$biopsy_num==0 & data1$age_ge50==0)]<-1
 data1$biopsy50[which (data1$biopsy_num==1 & data1$age_ge50==0)]<-2
 data1$biopsy50[which (data1$biopsy_num==2 & data1$age_ge50==0)]<-3
 data1$biopsy50[which (data1$biopsy_num==0 & data1$age_ge50==1)]<-4
 data1$biopsy50[which (data1$biopsy_num==1 & data1$age_ge50==1)]<-5
 data1$biopsy50[which (data1$biopsy_num==2 & data1$age_ge50==1)]<-6
-
+table(data1$age_ge50)
 #5. Age at first live birth
-
+table(data1$age_flb)
 data1$age_flb<-data1$age_preg1
 data1$age_flb[which (data1$age_flb==777)]<-NA
 data1$age_flb[which (data1$age_flb==888)]<-NA
@@ -589,6 +590,7 @@ data1$meno_age[which (data1$meno_age>=777)]<-NA
 data1$bmi[which(data1$bmi>=777)]<-NA
 data1$bmi_earlyadult[which(data1$bmi_earlyadult>=777)]<-NA
   
+summary(data1$dxage)
   #######################
   # Add labels
   #######################
@@ -684,26 +686,27 @@ data1$bmi_earlyadult[which(data1$bmi_earlyadult>=777)]<-NA
 
 #split data to look 
 #Create new vars for summaries without outliers
-
-data1$age_new<-data1$age
-data1$age_new[which (data1$age_outlier==1)]<-NA
-data1$agemenarche_new<-data1$agemenarche
-data1$agemenarche_new[which (data1$agemenarche_outlier==1)]<-NA
-data1$ageflb_new<-data1$age_flb
-data1$ageflb_new[which (data1$agepreg1_outlier==1)]<-NA
-data1$parity_new<-data1$parity
-data1$parity_new[which (data1$parity_outlier==1)]<-NA
-data1$bmi_new<-data1$bmi
-data1$bmi_new[which (data1$bmi_outlier==1)]<-NA
-data1$heightin_new<-data1$height_in
-data1$heightin_new[which (data1$height_outlier==1)]<-NA
-
-data1$bmi_earlyadult_new<-data1$bmi_earlyadult
-data1$bmi_earlyadult_new[which (data1$bmiearly_outlier==1)]<-NA
-
+# 
+ data1$age_new<-data1$age
+ data1$age_new[which (data1$age_outlier==1)]<-NA
+ data1$agemenarche_new<-data1$agemenarche
+ data1$agemenarche_new[which (data1$agemenarche_outlier==1)]<-NA
+ data1$ageflb_new<-data1$age_flb
+ data1$ageflb_new[which (data1$agepreg1_outlier==1)]<-NA
+ data1$parity_new<-data1$parity
+ data1$parity_new[which (data1$parity_outlier==1)]<-NA
+ data1$bmi_new<-data1$bmi
+ data1$bmi_new[which (data1$bmi_outlier==1)]<-NA
+ data1$heightin_new<-data1$height_in
+ data1$heightin_new[which (data1$height_outlier==1)]<-NA
+# 
+ data1$bmi_earlyadult_new<-data1$bmi_earlyadult
+ data1$bmi_earlyadult_new[which (data1$bmiearly_outlier==1)]<-NA
+# 
 data1_post<-data1[which (data1$meno_stat==2),]
-dim(data1_post)
+# dim(data1_post)
 
+  summary(data1$agemenarche)
 data1_continuous<-data1[c("age_new",
                           "agemenarche_new",
                           "biopsy_num",
@@ -1011,7 +1014,7 @@ pct
   data1$gail_biopage[which (data1$biopsy50==4)]<-log(1)
   data1$gail_biopage[which (data1$biopsy50==5)]<-log(1.273)
   data1$gail_biopage[which (data1$biopsy50==6)]<-log(1.62)
-  
+  table(data1$gail_biopage)
   #age and relative combined
   data1$ageflb_famhx<-NA
   data1$ageflb_famhx[which (data1$age_flb_cat5==1 & data1$famhx_first==0)]<-1
@@ -1044,7 +1047,7 @@ pct
   
   data1$gail_agerel[which (data1$ageflb_famhx==9)]<-log(1.927) #>30
   data1$gail_agerel[which (data1$ageflb_famhx==10)]<-log(2.834) 
-  
+  table(data1$gail_agerel)
   data1$gail_atyphyper<-0
   data1$gail_biopsy<-0
   data1$gail_atyphyper[which (data1$atyp_hyp==1)]<-log(1.82)
@@ -1053,12 +1056,17 @@ pct
   ##################
   # CARE
   ##################
-  
+ 
   #Beta coefficients
   data1$care_agemenarch<-0
   data1$care_agemenarch[which (data1$age_menarche_cat3==1)]<-log(1)
   data1$care_agemenarch[which (data1$age_menarche_cat3==2)]<-log(1.31)
   data1$care_agemenarch[which (data1$age_menarche_cat3==3)]<-log(1.31)
+  table(data1$care_agemenarch)
+  table(data1$biopsy50)
+  
+  data1$care_testbio<-0
+  table(data1$care_testbio)
   
   data1$care_biopage<-0
   data1$care_biopage[which (data1$biopsy50==1)]<-log(1)
@@ -1067,7 +1075,7 @@ pct
   data1$care_biopage[which (data1$biopsy50==4)]<-log(1)
   data1$care_biopage[which (data1$biopsy50==5)]<-log(1.07)
   data1$care_biopage[which (data1$biopsy50==6)]<-log(1.15)
-  
+  table(data1$care_biopage)
   #age and relative combined
   data1$ageflb_famhx<-NA
   data1$ageflb_famhx[which (data1$age_flb_cat5==1 & data1$famhx_first==0)]<-1
@@ -1080,7 +1088,7 @@ pct
   data1$ageflb_famhx[which (data1$age_flb_cat5==4 & data1$famhx_first==1)]<-8
   data1$ageflb_famhx[which (data1$age_flb_cat5==5 & data1$famhx_first==0)]<-9
   data1$ageflb_famhx[which (data1$age_flb_cat5==5 & data1$famhx_first==1)]<-10
-  
+  table(data1$ageflb_famhx)
   data1$care_agerel<-0
   data1$care_agerel[which (data1$ageflb_famhx==3)]<-log(1)
   data1$care_agerel[which (data1$ageflb_famhx==4)]<-log(1.61) #don't have data on more than 1
@@ -1092,7 +1100,7 @@ pct
   data1$care_agerel[which (data1$ageflb_famhx==8)]<-log(1.61) 
   data1$care_agerel[which (data1$ageflb_famhx==9)]<-log(1)
   data1$care_agerel[which (data1$ageflb_famhx==10)]<-log(1.61) 
-  
+table(data1$care_agerel)
   data1$care_atyphyper<-0
   data1$care_biopsy<-0
   data1$care_atyphyper[which (data1$atyp_hyp==1)]<-log(1.82)
@@ -1159,17 +1167,17 @@ pct
   ####################
   
   data1$BWHS_agemenarch50<-0
-  data1$BWHS_agemenarch50[which (data1$age_menarche_cat2==1 & data1$age_ge50_new2==0)]<-log(1.37)
-  data1$BWHS_agemenarch50[which (data1$age_menarche_cat2==1 & data1$age_ge50_new2==1)]<-log(1)
-  data1$BWHS_agemenarch50[which (data1$age_menarche_cat2==2 & data1$age_ge50_new2==0)]<-log(1.08)
-  data1$BWHS_agemenarch50[which (data1$age_menarche_cat2==2 & data1$age_ge50_new2==1)]<-log(1)
+  data1$BWHS_agemenarch50[which (data1$age_menarche_cat2==1 & data1$age_ge50==0)]<-log(1.37)
+  data1$BWHS_agemenarch50[which (data1$age_menarche_cat2==1 & data1$age_ge50==1)]<-log(1)
+  data1$BWHS_agemenarch50[which (data1$age_menarche_cat2==2 & data1$age_ge50==0)]<-log(1.08)
+  data1$BWHS_agemenarch50[which (data1$age_menarche_cat2==2 & data1$age_ge50==1)]<-log(1)
   summary(data1$BWHS_agemenarch50)
   
   data1$BWHS_famhx_age50<-0
-  data1$BWHS_famhx_age50[which (data1$age_ge50_new2==0 & data1$famhx_first_new2==0)]<-log(1)
-  data1$BWHS_famhx_age50[which (data1$age_ge50_new2==0 & data1$famhx_first_new2==1)]<-log(1.41) #choose as if relative was >=50 at dx
-  data1$BWHS_famhx_age50[which (data1$age_ge50_new2==1 & data1$famhx_first_new2==0)]<-log(1)
-  data1$BWHS_famhx_age50[which (data1$age_ge50_new2==1 & data1$famhx_first_new2==1)]<-log(1.53)
+  data1$BWHS_famhx_age50[which (data1$age_ge50==0 & data1$famhx_first==0)]<-log(1)
+  data1$BWHS_famhx_age50[which (data1$age_ge50==0 & data1$famhx_first==1)]<-log(1.41) #choose as if relative was >=50 at dx
+  data1$BWHS_famhx_age50[which (data1$age_ge50==1 & data1$famhx_first==0)]<-log(1)
+  data1$BWHS_famhx_age50[which (data1$age_ge50==1 & data1$famhx_first==1)]<-log(1.53)
   data1$BWHS_famhx_age50[which (is.na(data1$BWHS_famhx_age50))]<-0
   
   data1$ocuse_dur_new<-data1$ocuse_dur
@@ -1179,14 +1187,12 @@ pct
   data1$BWHS_ocuse<-0
   data1$BWHS_ocuse[which (data1$ocuse_dur_new<5 | data1$ocuse_cat==1)]<-log(1)
   data1$BWHS_ocuse[which (data1$ocuse_dur_new>=5 & data1$ocuse_cat!=1)]<-log(1.15)
-  data1$BWHS_ocuse[which (is.na(data1$BWHSocuse))]<-0
+  data1$BWHS_ocuse[which (is.na(data1$BWHS_ocuse))]<-0
   
-  summary(data1$bmi_earlyadult_new)
   data1$BWHS_bmi_young<-0
   data1$BWHS_bmi_young[which (data1$bmi_earlyadult_new<25)]<-log(1.16)
   data1$BWHS_bmi_young[which (data1$bmi_earlyadult_new>=25)]<-log(1)
   data1$BWHS_bmi_young[which (is.na(data1$BWHS_bmi_young))]<-0
-  
   
   data1$BWHS_bmi<-0
   data1$BWHS_bmi[which (data1$bmi_new<30 & data1$meno_stat==1)]<-log(1)
@@ -1199,11 +1205,11 @@ pct
   data1$bbdorbiop<-ifelse(data1$bbd==1|data1$biopsy_num>=1, 1,0)
   
   data1$BWHS_bbdbiopsy<-0
-  data1$BWHS_bbdbiopsy[which (data1$age_ge50_new2==0 & data1$bbdorbiop==1)]<-log(1.74)
-  data1$BWHS_bbdbiopsy[which (data1$age_ge50_new2==1 & data1$bbdorbiop==1)]<-log(1.16)
+  data1$BWHS_bbdbiopsy[which (data1$age_ge50==0 & data1$bbdorbiop==1)]<-log(1.74)
+  data1$BWHS_bbdbiopsy[which (data1$age_ge50==1 & data1$bbdorbiop==1)]<-log(1.16)
   data1$BWHS_bbdbiopsy[which (is.na(data1$BWHS_bbdbiopsy))]<-0
   
-  #############
+  ##############
   # ROSNER
   #############
   
@@ -1211,6 +1217,7 @@ pct
   #Beta coefficients
   #age meno status
   table(data1$agemeno)
+  
   data1$rosner_agemeno<-0
   data1$rosner_agemeno[which (data1$agemeno==1)]<-log(1)
   data1$rosner_agemeno[which (data1$agemeno==2)]<-log(1.27)
@@ -1303,13 +1310,13 @@ pct
   data1$agemeno_cat[which (data1$meno_age>=55 & !is.na(data1$meno_age))]<-5
   
   data1$icare_agemeno<-0
-  data1$icare_agemeno[which (data1$age_ge50_new2==1 & data1$agemeno_cat==1)]<-log(0.67)
-  data1$icare_agemeno[which (data1$age_ge50_new2==1 &data1$agemeno_cat==2)]<-log(0.73)
-  data1$icare_agemeno[which (data1$age_ge50_new2==1 &data1$agemeno_cat==3)]<-log(0.86)
-  data1$icare_agemeno[which (data1$age_ge50_new2==1 &data1$agemeno_cat==4)]<-log(1)
-  data1$icare_agemeno[which (data1$age_ge50_new2==1 &data1$agemeno_cat==5)]<-log(1.12)
+  data1$icare_agemeno[which (data1$age_ge50==1 & data1$agemeno_cat==1)]<-log(0.67)
+  data1$icare_agemeno[which (data1$age_ge50==1 &data1$agemeno_cat==2)]<-log(0.73)
+  data1$icare_agemeno[which (data1$age_ge50==1 &data1$agemeno_cat==3)]<-log(0.86)
+  data1$icare_agemeno[which (data1$age_ge50==1 &data1$agemeno_cat==4)]<-log(1)
+  data1$icare_agemeno[which (data1$age_ge50==1 &data1$agemeno_cat==5)]<-log(1.12)
   data1$icare_agemeno[which (is.na(data1$icare_agemeno))]<-0
-  
+
   data1$icare_parity<-0
   data1$icare_parity[which (data1$parity_new==0)]<-log(1)
   data1$icare_parity[which (data1$parity_new==1)]<-log(.87)
@@ -1327,15 +1334,15 @@ pct
   data1$icare_ocuse<-0
   data1$icare_ocuse[which (data1$ocuse_cat==1)]<-log(1)
   data1$icare_ocuse[which (data1$ocuse_cat==2)]<-log(1.14)
-  data1$icare_ocuse[which (data1$age_ge50_new2==0 & data1$ocuse_cat==3)]<-log(1.12)
-  data1$icare_ocuse[which (data1$age_ge50_new2==0 & data1$ocuse_cat==4)]<-log(1.33)
+  data1$icare_ocuse[which (data1$age_ge50==0 & data1$ocuse_cat==3)]<-log(1.12)
+  data1$icare_ocuse[which (data1$age_ge50==0 & data1$ocuse_cat==4)]<-log(1.33)
   data1$icare_ocuse[which (is.na(data1$icare_ocuse))]<-0
   
   data1$icare_bmi<-0
-  data1$icare_bmi[which (data1$age_ge50_new2==0 & data1$bmi_cat4==1)]<-log(1.28)
-  data1$icare_bmi[which (data1$age_ge50_new2==0 & data1$bmi_cat4==2)]<-log(1)
-  data1$icare_bmi[which (data1$age_ge50_new2==0 & data1$bmi_cat4==3)]<-log(0.92)
-  data1$icare_bmi[which (data1$age_ge50_new2==0 & data1$bmi_cat4==4)]<-log(0.74)
+  data1$icare_bmi[which (data1$age_ge50==0 & data1$bmi_cat4==1)]<-log(1.28)
+  data1$icare_bmi[which (data1$age_ge50==0 & data1$bmi_cat4==2)]<-log(1)
+  data1$icare_bmi[which (data1$age_ge50==0 & data1$bmi_cat4==3)]<-log(0.92)
+  data1$icare_bmi[which (data1$age_ge50==0 & data1$bmi_cat4==4)]<-log(0.74)
   data1$icare_bmi[which (is.na(data1$icare_bmi))]<-0
   data1$icare_height<-0
   data1$icare_height<-log(1.016)
@@ -1350,8 +1357,8 @@ pct
   data1$icare_alcohol[which (data1$alc_gram_cat7==7)]<-log(1.46)
   data1$icare_alcohol[which (is.na(data1$icare_alcohol))]<-0
   data1$icare_bbd<-0
-  data1$icare_bbd[which (data1$age_ge50_new2==0 & data1$bbd==1)]<-log(1.68)
-  data1$icare_bbd[which (data1$age_ge50_new2==1 & data1$bbd==1)]<-log(1.51)
+  data1$icare_bbd[which (data1$age_ge50==0 & data1$bbd==1)]<-log(1.68)
+  data1$icare_bbd[which (data1$age_ge50==1 & data1$bbd==1)]<-log(1.51)
   data1$icare_bbd[which (is.na(data1$icare_bbd))]<-0
   #BMI and hrt use
   
@@ -1361,18 +1368,18 @@ pct
   data1$bmi_cat3[which (data1$bmi_new>=30)]<-3
   
   data1$icare_bmihrt<-0
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==1 & data1$bmi_cat3==1 )]<-log(1)
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==1 & data1$bmi_cat3==2 )]<-log(1.13)
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==1 & data1$bmi_cat3==3 )]<-log(1.25)
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==2 & data1$bmi_cat3==1 )]<-log(1)
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==2 & data1$bmi_cat3==2 )]<-log(1.13)
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==2 & data1$bmi_cat3==3 )]<-log(1.25)
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==3  & data1$bmi_cat3==1 )]<-log(2.19)
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==3  & data1$bmi_cat3==2 )]<-log(1.49)
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==3  & data1$bmi_cat3==3 )]<-log(1.45)
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==2 &  data1$bmi_cat3==1 )]<-log(1.57)
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==2 &  data1$bmi_cat3==2 )]<-log(1.49)
-  data1$icare_bmihrt[which (data1$age_ge50_new2==1 & data1$hrtuse==3 & data1$pmh_type_cur==2 &  data1$bmi_cat3==3 )]<-log(1.45)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==1 & data1$bmi_cat3==1 )]<-log(1)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==1 & data1$bmi_cat3==2 )]<-log(1.13)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==1 & data1$bmi_cat3==3 )]<-log(1.25)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==2 & data1$bmi_cat3==1 )]<-log(1)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==2 & data1$bmi_cat3==2 )]<-log(1.13)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==2 & data1$bmi_cat3==3 )]<-log(1.25)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==3 & data1$pmh_type_cur==3  & data1$bmi_cat3==1 )]<-log(2.19)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==3 & data1$pmh_type_cur==3  & data1$bmi_cat3==2 )]<-log(1.49)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==3 & data1$pmh_type_cur==3  & data1$bmi_cat3==3 )]<-log(1.45)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==3 & data1$pmh_type_cur==2 &  data1$bmi_cat3==1 )]<-log(1.57)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==3 & data1$pmh_type_cur==2 &  data1$bmi_cat3==2 )]<-log(1.49)
+  data1$icare_bmihrt[which (data1$age_ge50==1 & data1$hrtuse==3 & data1$pmh_type_cur==2 &  data1$bmi_cat3==3 )]<-log(1.45)
   data1$icare_bmihrt[which (is.na(data1$icare_bmihrt))]<-0
   
   data1$heightnew<-data1$height
@@ -1464,8 +1471,8 @@ pct
   
   #Assume family history yes is mother having breast cancer at age 60
   data1$tyrer_famhx<-0
-  data1$tyrer_famhx[which (data1$famhx_first_new2==1 & data1$meno_stat==1)]<-log(2.04)
-  data1$tyrer_famhx[which (data1$famhx_first_new2==1 & data1$meno_stat==2)]<-log(2.11)
+  data1$tyrer_famhx[which (data1$famhx_first==1 & data1$meno_stat==1)]<-log(2.04)
+  data1$tyrer_famhx[which (data1$famhx_first==1 & data1$meno_stat==2)]<-log(2.11)
   
   data1$agemenarche_new2<-data1$agemenarche
   data1$agemenarche_new2[which (is.na(data1$agemenarche))]<-13 #make NAs for age menarche 13
@@ -1666,31 +1673,31 @@ pct
     # GAIL
     ##########
   
-    # summary(data1$gail_logrel_center)
-    # ggplot(data1, aes(x=gail_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, Gail", x="Log RR",y="Frequency") 
-    # #ggsave("C:/Users/krist/Dropbox/BCRP Project/gail_logrr.png", width=4, height=4)
-    # summary(data1$gail_rr)
-    # ggplot(data1, aes(x=gail_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, Gail", x="RR",y="Frequency") 
-    # #ggsave("C:/Users/krist/Dropbox/BCRP Project/gail_rr.png", width=4, height=4)
+     summary(data1$gail_logrel_center)
+     ggplot(data1, aes(x=gail_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(x="Gail log RR",y="Frequency") + coord_cartesian(xlim = c(-2,2))
+     ggsave("C:/Users/krist/Dropbox/BCRP Project/gail_logrr.png", width=4, height=4)
+     summary(data1$gail_rr)
+     ggplot(data1, aes(x=gail_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, Gail", x="RR",y="Frequency") 
+     ggsave("C:/Users/krist/Dropbox/BCRP Project/gail_rr.png", width=4, height=4)
     # 
     # #############
     # # ROSNER
     # #############
     # 
-    # summary(data1$rosner_logrel_center)
-    # ggplot(data1, aes(x=rosner_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, rosner", x="Log RR",y="Frequency") 
-    # ggsave("C:/Users/krist/Dropbox/BCRP Project/rosner_logrr.png", width=4, height=4)
-    # summary(data1$rosner_rr)
-    # ggplot(data1, aes(x=rosner_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, rosner", x="RR",y="Frequency") 
-    # ggsave("C:/Users/krist/Dropbox/BCRP Project/rosner_rr.png", width=4, height=4)
+     summary(data1$rosner_logrel_center)
+     ggplot(data1, aes(x=rosner_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(x="Rosner log RR",y="Frequency") + coord_cartesian(xlim = c(-2,2))
+     ggsave("C:/Users/krist/Dropbox/BCRP Project/rosner_logrr.png", width=4, height=4)
+     summary(data1$rosner_rr)
+     ggplot(data1, aes(x=rosner_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, rosner", x="RR",y="Frequency") 
+     ggsave("C:/Users/krist/Dropbox/BCRP Project/rosner_rr.png", width=4, height=4)
     # 
     # 
     # ##################
     # # iCARE
     # ##################
-    # summary(data1$icare_logrel_center)
-    # ggplot(data1, aes(x=icare_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, icare", x="Log RR",y="Frequency") 
-    # ggsave("C:/Users/krist/Dropbox/BCRP Project/icare_logrr.png", width=4, height=4)
+     summary(data1$icare_logrel_center)
+     ggplot(data1, aes(x=icare_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(x="iCARE log RR",y="Frequency") + coord_cartesian(xlim = c(-2,2))
+     ggsave("C:/Users/krist/Dropbox/BCRP Project/icare_logrr.png", width=4, height=4)
     # summary(data1$icare_rr)
     # ggplot(data1, aes(x=icare_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, icare", x="RR",y="Frequency") 
     # ggsave("C:/Users/krist/Dropbox/BCRP Project/icare_rr.png", width=4, height=4)
@@ -1699,11 +1706,11 @@ pct
     # # TYRER CUZICK
     # ###############
     # 
-    # summary(data1$tyrer_logrel_center)
+    summary(data1$tyrer_logrel_center)
     # 
-    # ggplot(data1, aes(x=tyrer_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, tyrer", x="Log RR",y="Frequency") 
-    # ggsave("C:/Users/krist/Dropbox/BCRP Project/tyrer_logrr.png", width=4, height=4)
-    # summary(data1$tyrer_rr)
+    ggplot(data1, aes(x=tyrer_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(x="Tyrer-Cuzick log RR",y="Frequency") + coord_cartesian(xlim = c(-2,2))
+     ggsave("C:/Users/krist/Dropbox/BCRP Project/tyrer_logrr.png", width=4, height=4)
+     summary(data1$tyrer_rr)
     # ggplot(data1, aes(x=tyrer_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, tyrer", x="RR",y="Frequency") 
     # ggsave("C:/Users/krist/Dropbox/BCRP Project/tyrer_rr.png", width=4, height=4)
     # 
@@ -1711,9 +1718,9 @@ pct
     # # BOADICEA
     # #################
     # 
-    # summary(data1$boad_logrel_center)
-    # ggplot(data1, aes(x=boad_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, boad", x="Log RR",y="Frequency") 
-    # ggsave("C:/Users/krist/Dropbox/BCRP Project/boad_logrr.png", width=4, height=4)
+     summary(data1$boad_logrel_center)
+    ggplot(data1, aes(x=boad_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(x="BOAD log RR",y="Frequency") + coord_cartesian(xlim = c(-2,2))
+     ggsave("C:/Users/krist/Dropbox/BCRP Project/boad_logrr.png", width=4, height=4)
     # summary(data1$boad_rr)
     # ggplot(data1, aes(x=boad_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, boad", x="RR",y="Frequency") 
     # ggsave("C:/Users/krist/Dropbox/BCRP Project/boad_rr.png", width=4, height=4)
@@ -1799,7 +1806,7 @@ pct
 
     ##PLCO
     
-  
+    
     data1plco$gail_logrel<-data1plco$gail_agemenarch+data1plco$gail_biopage+data1plco$gail_agerel+data1plco$gail_atyphyper+data1plco$gail_biopsy
     #Center the logrel risk for comparisons
     data1plco$gail_logrel_center<-data1plco$gail_logrel-mean(data1plco$gail_logrel)
@@ -1842,14 +1849,47 @@ pct
     # summary(data1plco$gail_rr, data1plco$rosner_rr, data1plco$icare_rr, data1plco$boad_rr)
     # 
     # 
+    
+    
+    
+    ##########
+    #Black women
+    #############
+    
+    sum(is.na(data1_black$gail_logrel_center))
+    sum(is.na(data1_black$care_logrel_center))
+    
+    
+    summary(data1_black$gail_logrel_center)
+    ggplot(data1_black, aes(x=gail_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs( x="Gail log RR",y="Frequency")+ coord_cartesian(xlim = c(-2,2))
+    ggsave("C:/Users/krist/Dropbox/BCRP Project/gail_black_logrr.png", width=4, height=4)
+    
+    
+    summary(data1_black$rosner_logrel_center)
+    ggplot(data1_black, aes(x=rosner_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(x="Rosner log RR",y="Frequency")+ coord_cartesian(xlim = c(-2,2))
+    ggsave("C:/Users/krist/Dropbox/BCRP Project/rosner_black_logrr.png", width=4, height=4)
+    
+    summary(data1_black$icare_logrel_center)
+    ggplot(data1_black, aes(x=icare_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(x="iCARE log RR",y="Frequency")+ coord_cartesian(xlim = c(-2,2))
+    ggsave("C:/Users/krist/Dropbox/BCRP Project/icare_black_logrr.png", width=4, height=4)
+    
+    summary(data1_black$tyrer_logrel_center)
+    ggplot(data1_black, aes(x=tyrer_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(x="Tyrer-Cuzicklog RR",y="Frequency")+ coord_cartesian(xlim = c(-2,2)) 
+    ggsave("C:/Users/krist/Dropbox/BCRP Project/tyrer_black_logrr.png", width=4, height=4)
+    
+    summary(data1_black$boad_logrel_center)
+    ggplot(data1_black, aes(x=boad_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(x="BOADICEA log RR",y="Frequency")+ coord_cartesian(xlim = c(-2,2))
+    ggsave("C:/Users/krist/Dropbox/BCRP Project/boad_black_logrr.png", width=4, height=4)
+    
     ##############
     #CARE
     ##############
     
-    # summary(data1_black$care_rr)
-    # summary(data1_black$care_logrel_center)
-    # ggplot(data1_black, aes(x=care_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, care", x="Log RR",y="Frequency") 
-    # ggsave("C:/Users/krist/Dropbox/BCRP Project/care_logrr.png", width=4, height=4)
+    
+     summary(data1_black$care_rr)
+     summary(data1_black$care_logrel_center)
+     ggplot(data1_black, aes(x=care_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(x="CARE log RR",y="Frequency")+ coord_cartesian(xlim = c(-2,2))
+     ggsave("C:/Users/krist/Dropbox/BCRP Project/care_logrr.png", width=4, height=4)
     # summary(data1_black$care_rr)
     # ggplot(data1_black, aes(x=care_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, care", x="RR",y="Frequency") 
     # ggsave("C:/Users/krist/Dropbox/BCRP Project/care_rr.png", width=4, height=4)
@@ -1858,9 +1898,9 @@ pct
     # # BWHS
     # ##################
     # 
-    # summary(data1_black$BWHS_logrel_center)
-    # ggplot(data1_black, aes(x=BWHS_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Log Relative Risk Distribution, BWHS", x="Log RR",y="Frequency") 
-    # ggsave("C:/Users/krist/Dropbox/BCRP Project/BWHS_logrr.png", width=4, height=4)
+     summary(data1_black$BWHS_logrel_center)
+     ggplot(data1_black, aes(x=BWHS_logrel_center))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(x="BWHS log RR",y="Frequency") + coord_cartesian(xlim = c(-2,2))
+     ggsave("C:/Users/krist/Dropbox/BCRP Project/BWHS_logrr.png", width=4, height=4)
     # summary(data1_black$BWHS_rr)
     # ggplot(data1_black, aes(x=BWHS_rr))+ geom_histogram(binwidth=0.1,fill="lightblue")+labs(title="Relative Risk Distribution, BWHS", x="RR",y="Frequency") 
     # ggsave("C:/Users/krist/Dropbox/BCRP Project/BWHS_rr.png", width=4, height=4)
@@ -1910,7 +1950,7 @@ pct
     
       data1$gail_rr_cat<-as.numeric(cut(data1$gail_rr, breaks=c(0, 1.15, 1.54, 10)))
     
-      data1$rosner_logrel_center<-as.numeric(cut(data1$rosner_rr, breaks=c(0, 1.15, 1.54, 10)))
+      data1$rosner_rr_cat<-as.numeric(cut(data1$rosner_rr, breaks=c(0, 1.15, 1.54, 10)))
     
       data1$icare_rr_cat<-as.numeric(cut(data1$icare_rr, breaks=c(0, 1.15, 1.54, 10)))
          
@@ -1937,7 +1977,7 @@ pct
       #Cohort specific
       
       data1nhs$gail_rr_cat<-as.numeric(cut(data1nhs$gail_rr, breaks=c(0, 1.15, 1.54, 10)))
-                    
+                             
       data1nhs$rosner_rr_cat<-as.numeric(cut(data1nhs$rosner_rr, breaks=c(0, 1.15, 1.54, 10)))
                               
       data1nhs$icare_rr_cat<-as.numeric(cut(data1nhs$icare_rr, breaks=c(0, 1.15, 1.54, 10)))
@@ -1984,9 +2024,17 @@ pct
 
     
     #Looking at agreement in rr by model
-    # ggplot(data1, aes(x=gail_rr, y=rosner_rr)) + geom_point()
+     # ggplot(data1, aes(x=gail_rr, y=rosner_rr)) + geom_point()
     # ggsave("C:/Users/krist/Dropbox/BCRP Project/gailvrosner.png", width=4, height=4)
-    # ggplot(data1, aes(x=gail_rr, y=tyrer_rr)) + geom_point()
+    summary(data1$gail_logrel_center)
+    summary(data1$tyrer_logrel_center)
+    
+    
+    cor(x=data1$gail_logrel_center, y=data1$tyrer_logrel_center, method=c("pearson","spearman"))
+    cordat
+    ggplot(data1, aes(x=gail_logrel_center, y=tyrer_logrel_center)) + geom_point()+ coord_cartesian(xlim=c(-1.5, 1.5), ylim=c(-2,2))
+    ggsave("C:/Users/krist/Dropbox/BCRP Project/gailvtyrer.png", width=4, height=4)
+    ggplot(data1, aes(x=gail_rr, y=tyrer_rr)) + geom_point()
     # ggsave("C:/Users/krist/Dropbox/BCRP Project/gailvtyrer.png", width=4, height=4)
     # ggplot(data1, aes(x=gail_rr, y=boad_rr)) + geom_point()
     # ggsave("C:/Users/krist/Dropbox/BCRP Project/gailvboad.png", width=4, height=4)
@@ -2016,6 +2064,7 @@ pct
       #row should be individual with the rating
       
       #compare among all
+   
   
         include<-c("subject_id","gail_rr_cat","rosner_rr_cat","icare_rr_cat","tyrer_rr_cat","boad_rr_cat")
         data1_cat1<-data.frame(data1[,(names(data1) %in% include)])
@@ -2121,7 +2170,7 @@ pct
       }
         
         
-        
+        head(data1_cat1)
      kappa.all<-kappa.fleiss(data1_cat1[,2:6])
      kappa.nhs<-kappa.fleiss(data1nhs_cat1[,2:6])
      kappa.nhs2<-kappa.fleiss(data1nhs2_cat1[,2:6])
@@ -2152,7 +2201,7 @@ pct
       #take data rrcat, for each row (1) use the following function for x. Here the function for x is 
       #finding the length which x=1. 
      
-     data1_cat1$ncat1=apply(data1_cat1, 1, function(x) length(which(x==1)))
+     #data1_cat1$ncat1=apply(data1_cat1, 1, function(x) length(which(x==1)))
      #head(data1_cat1)
      
       data1_cat1new <- data1_cat1 %>%
@@ -2165,12 +2214,12 @@ pct
                ncat3pct=ifelse(is.na(ncat3), 0, ncat3/5),
                
                logpct1=ifelse(ncat1pct==0, 0, log(ncat1pct)),
-               logpct2=ifelse(ncat2pct==0, 0, log(ncat1pct)),
-               logpct3=ifelse(ncat3pct==0, 0, log(ncat1pct)),
+               logpct2=ifelse(ncat2pct==0, 0, log(ncat2pct)),
+               logpct3=ifelse(ncat3pct==0, 0, log(ncat3pct)),
                
                 H=(ncat1pct*logpct1+ ncat2pct*logpct2+ncat3pct*logpct3))
+  summary(data1_cat1new$H)
       
-
       data1_black_cat1new <- data1_black_cat1 %>%
         mutate (ncat1=apply(data1_black_cat1, 1, function(x) length(which(x==1))),
                 ncat2=apply(data1_black_cat1, 1, function(x) length(which(x==2))),
@@ -2181,52 +2230,47 @@ pct
                 ncat3pct=ifelse(is.na(ncat3), 0, ncat3/7),
                 
                 logpct1=ifelse(ncat1pct==0, 0, log(ncat1pct)),
-                logpct2=ifelse(ncat2pct==0, 0, log(ncat1pct)),
-                logpct3=ifelse(ncat3pct==0, 0, log(ncat1pct)),
+                logpct2=ifelse(ncat2pct==0, 0, log(ncat2pct)),
+                logpct3=ifelse(ncat3pct==0, 0, log(ncat3pct)),
                 
                 H=(ncat1pct*logpct1+ ncat2pct*logpct2+ncat3pct*logpct3))
      
 
-      #summary(data1_cat1new$ncat1pct)
-      #summary(data1_cat1new$logpct2)
+      summary(data1_black_cat1new$H)
+      summary(data1_cat1new$ncat1pct)
+      summary(data1_cat1new$logpct2)
       
       library(ggplot2)
-     
-     # summary(data1_cat1new$H)
-     v ggplot(data1_cat1new, aes(x=H))+geom_histogram(color = "darkmagenta", fill = "darkmagenta", bins=5)+ylab("Frequency")+xlab("Entropy") + theme(plot.title=element_text(size=14),axis.title.x=element_text(size=14),axis.title.y=element_text(size=14),axis.text.y=element_text(size=14), axis.text.x=element_text(size=14))+geom_vline(xintercept=-1.61, linetype=3, size=1.5)+geom_vline(xintercept=0, linetype=3, size=1.5)
+      hist(data1$boad_logrel_center)
+      hist(data1_cat1new$H, xlab="Entropy", ylab="Frequency", xlim=c(-1,0), col="darkmagenta")
       
-      #ggsave("C:/Users/krist/Dropbox/BCRP Project/entropy.png", width=4, height=4)
+        lines(density(data1_cat1new$H), col=4, lwd=2)
       
-     # max(data1_black_cat1new$H)
+      summary(data1_cat1new$H)
+      ggplot(data1_cat1new, aes(x=H))+geom_histogram(color = "darkmagenta", fill = "darkmagenta", bins=10)+ylab("Frequency")+xlab("Entropy") + theme(plot.title=element_text(size=14),axis.title.x=element_text(size=14),axis.title.y=element_text(size=14),axis.text.y=element_text(size=14), axis.text.x=element_text(size=14))+geom_vline(xintercept=-1.05, linetype=3, size=1.5)+geom_vline(xintercept=0, linetype=3, size=1.5)
       
-      #ggplot(data1_black_cat1new, aes(x=H))+geom_histogram(color = "darkmagenta", fill = "darkmagenta", bins=5)+ylab("Frequency")+xlab("Entropy") + theme(plot.title=element_text(size=14),axis.title.x=element_text(size=14),axis.title.y=element_text(size=14),axis.text.y=element_text(size=14), axis.text.x=element_text(size=14))+geom_vline(xintercept=-1.9, linetype=3, size=1.5)+geom_vline(xintercept=0, linetype=3, size=1.5)
+      ggsave("C:/Users/krist/Dropbox/BCRP Project/entropy.png", width=4, height=4)
       
-     # ggsave("C:/Users/krist/Dropbox/BCRP Project/entropy_b.png", width=4, height=4)
+      max(data1_black_cat1new$H)
+      
+      ggplot(data1_black_cat1new, aes(x=H))+geom_histogram(color = "darkmagenta", fill = "darkmagenta", bins=10)+ylab("Frequency")+xlab("Entropy") + theme(plot.title=element_text(size=14),axis.title.x=element_text(size=14),axis.title.y=element_text(size=14),axis.text.y=element_text(size=14), axis.text.x=element_text(size=14))+geom_vline(xintercept=-1.08, linetype=3, size=1.5)+geom_vline(xintercept=0, linetype=3, size=1.5)
+      
+      ggsave("C:/Users/krist/Dropbox/BCRP Project/entropy_b.png", width=4, height=4)
       
       
-      #ggplot(data1_categories, aes(x=as.factor(alcohol_status)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Alcohol status")+xlab("Alcohol status")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
+      ggplot(data1_categories, aes(x=as.factor(alcohol_status)))+ geom_bar(color="lightblue", fill="lightblue") + ylab("Frequency")+ggtitle("Alcohol status")+xlab("Alcohol status")+ theme(plot.title=element_text(size=12),axis.title.x=element_text(size=10),axis.title.y=element_text(size=10),axis.text.y=element_text(size=8), axis.text.x=element_text(size=8,angle=60))
       # #ggsave("C:/Users/krist/Dropbox/BCRP Project/alcohol_status.png", width=3, height=4)
       
       #HISTOGRAM FOR H
-      #table(data1_cat1new$H)
-      #mean(data1_cat1new$H)
-      #-0.2319643
-     # summary(data1_cat1new$H)
-      #Min.     1st Qu.  Median  Mean   3rd Qu.   Max. 
-      #-1.0995 -0.5004  0.0000 -0.2320  0.0000  0.0000 
-     # sd(data_rrcat$H)
-      ##0.2833561
-      
-      #mean(data_black_rrcat$H)
-      #-0.2532244
-     # sd(data_black_rrcat$H)
-      # 0.2599664
-     # summary(data_black_rrcat$H)
-      ##    Min.  1st Qu.  Median  Mean   3rd Qu.  Max. 
-      # -0.9609 -0.4101 -0.4101 -0.2532  0.0000  0.0000 
-      
-      #summary(data_rrcont$gail_rr)
-      #summary(data_rrcont$rosner_rr)
+      table(data1_cat1new$H)
+      mean(data1_cat1new$H)
+      summary(data1_cat1new$H)
+      sd(data_rrcat$H)
+      mean(data_black_rrcat$H)
+      sd(data_black_rrcat$H)
+      summary(data_black_rrcat$H)
+      summary(data_rrcont$gail_rr)
+      summary(data_rrcont$rosner_rr)
       
       ############################
       #3. Distance from agreement
@@ -2251,9 +2295,13 @@ pct
       
       data1_cont1$var=(data1_cont1$diff_gail)^2+(data1_cont1$diff_rosner)^2+(data1_cont1$diff_icare)^2+ (data1_cont1$diff_tyrer)^2+(data1_cont1$diff_boad)^2
       
-      #summary(data1_cont1$var)
-      #ggplot(data1_cont1, aes(x=var))+geom_histogram(color = "darkmagenta", fill = "darkmagenta")+ylab("Frequency")+xlab("Variance") + theme(plot.title=element_text(size=14),axis.title.x=element_text(size=14),axis.title.y=element_text(size=14),axis.text.y=element_text(size=14), axis.text.x=element_text(size=14))
-      #ggsave("C:/Users/krist/Dropbox/BCRP Project/variance.png", width=4, height=4)
+      summary(data1_cont1$var)
+      ggplot(data1_cont1, aes(x=var))+geom_histogram(color = "darkmagenta", fill = "darkmagenta")+ylab("Frequency")+xlab("Variance") + theme(plot.title=element_text(size=14),axis.title.x=element_text(size=14),axis.title.y=element_text(size=14),axis.text.y=element_text(size=14), axis.text.x=element_text(size=14))
+      ggsave("C:/Users/krist/Dropbox/BCRP Project/variance.png", width=4, height=4)
+      
+      ggplot(data1_cont1, aes(x=var2))+geom_histogram(color = "darkmagenta", fill = "darkmagenta")+ylab("Frequency")+xlab("Variance") + theme(plot.title=element_text(size=14),axis.title.x=element_text(size=14),axis.title.y=element_text(size=14),axis.text.y=element_text(size=14), axis.text.x=element_text(size=14))
+      ggsave("C:/Users/krist/Dropbox/BCRP Project/variance.png", width=4, height=4)
+      
       
       ###BLack participants
       
@@ -2269,10 +2317,9 @@ pct
       
       data1_black_cont1$var=(data1_black_cont1$diff_gail)^2+(data1_black_cont1$diff_rosner)^2+(data1_black_cont1$diff_icare)^2+ (data1_black_cont1$diff_tyrer)^2+(data1_black_cont1$diff_boad)^2
         
-      #summary(data1_black_cont1$var)
-      #ggplot(data1_black_cont1, aes(x=var))+geom_histogram(color = "darkmagenta", fill = "darkmagenta")+ylab("Frequency")+xlab("Variance") + theme(plot.title=element_text(size=14),axis.title.x=element_text(size=14),axis.title.y=element_text(size=14),axis.text.y=element_text(size=14), axis.text.x=element_text(size=14))
-      #ggsave("C:/Users/krist/Dropbox/BCRP Project/variance_black.png", width=4, height=4)
-      
+      summary(data1_black_cont1$var)
+      ggplot(data1_black_cont1, aes(x=var))+geom_histogram(color = "darkmagenta", fill = "darkmagenta")+ylab("Frequency")+xlab("Variance") + theme(plot.title=element_text(size=14),axis.title.x=element_text(size=14),axis.title.y=element_text(size=14),axis.text.y=element_text(size=14), axis.text.x=element_text(size=14))
+      ggsave("C:/Users/krist/Dropbox/BCRP Project/variance_black.png", width=4, height=4)
       
       #########################
       #4. table summarizing pairwise model concordance
@@ -2297,7 +2344,7 @@ pct
       
       install.packages("psych")
       library("psych")
-      
+      kappa3
       kappa1<-cohen.kappa(compare1)
       kappa2<-cohen.kappa(compare2)
       kappa3<-cohen.kappa(compare3)
@@ -2305,6 +2352,7 @@ pct
       kappa5<-cohen.kappa(compare5)
       kappa6<-cohen.kappa(compare6)
       kappa7<-cohen.kappa(compare7)
+      kappa7
       kappa8<-cohen.kappa(compare8)
       kappa9<-cohen.kappa(compare9)
       kappa10<-cohen.kappa(compare10)
@@ -2317,6 +2365,8 @@ pct
         result[1,4]<- rci<-x$confid[2,3]
         return(result)
       }
+      kappa3$weighted.kappa
+      
        dat1<-kappapull(kappa1)
        dat2<-kappapull(kappa2)
        dat3<-kappapull(kappa3)
@@ -2329,7 +2379,8 @@ pct
        dat10<-kappapull(kappa10)
        
        #print table
-       
+       dat1
+       dat3
        kappatable<-as.data.frame(rbind(dat1, dat2, dat3, dat4, dat5, dat6, dat7, dat8, dat9, dat10))
        names(kappatable)<-c("kappa","var","lci","rci")
        rownames(kappatable)<-c("gail.v.rosner", "gail.v.icare","gail.v.tyrer","gail.v.boad","rosner.v.icare","rosner.v.tyrer","rosner.v.boad","icare.v.tyrer","icare.v.boad","tyrer.v.boad")
@@ -2337,10 +2388,10 @@ pct
        write.csv(kappatable,"C:/Users/krist/Dropbox/BCRP Project/kappatable.csv")
        kappatable
        
-    
       #Rank correlation
-       
+      
       rankcor1<-cor(data1_cont1$gail_logrel_center, data1_cont1$rosner_logrel_center, method="spearman")
+      rankcor1
       rankcor2<-cor(data1_cont1$gail_logrel_center, data1_cont1$icare_logrel_center, method="spearman")
       rankcor3<-cor(data1_cont1$gail_logrel_center, data1_cont1$tyrer_logrel_center, method="spearman")
       rankcor4<-cor(data1_cont1$gail_logrel_center, data1_cont1$boad_logrel_center, method="spearman")
@@ -2366,6 +2417,10 @@ pct
       
       #Cohen's kappa
       
+      
+      table(data1_black$rosner_rr_cat, data1_black$boad_rr_cat)
+      table(data1_black$rosner_rr_cat)
+      summary(data1_black)
       bcompare1<-cbind(data1_black_cat1$gail_rr_cat, data1_black_cat1$rosner_rr_cat)
       bcompare2<-cbind(data1_black_cat1$gail_rr_cat, data1_black_cat1$icare_rr_cat)
       bcompare3<-cbind(data1_black_cat1$gail_rr_cat, data1_black_cat1$tyrer_rr_cat)
@@ -2480,11 +2535,16 @@ pct
       #As table
       brankcor<-as.data.frame(rbind(brankcor1,brankcor2, brankcor3, brankcor4, brankcor5, brankcor6, brankcor7, brankcor8, brankcor9, brankcor10, brankcor11,
                                    brankcor12, brankcor13, brankcor14, brankcor15, brankcor16, brankcor17, brankcor18, brankcor19, brankcor20, brankcor21))
-      head(brankcor)
+    
       names(brankcor)<-c("spearman cor")
       rownames(brankcor)<-c("gail.v.rosner", "gail.v.icare","gail.v.tyrer","gail.v.boad","gail.v.care","gail.v.bwhs","rosner.v.icare","rosner.v.tyrer","rosner.v.boad","rosner.v.care","rosner.v.bwhs","icare.v.tyrer","icare.v.boad","icare.v.care","icare.v.bwhs",
                                 "tyrer.v.boad","tyrer.v.care","tyrer.v.bwhs","boad.v.care","boad.v.bwhs","care.v.bwhs")
       write.csv(brankcor,"C:/Users/krist/Dropbox/BCRP Project/rankcorrtable_black.csv")
+
+      
+      
+      
+
       
     
       
