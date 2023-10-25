@@ -60,101 +60,22 @@ nhs2_allcontrol<-nhs2_core_data[which (nhs2_core_data$subject_id %in% nhs2contro
 plco_allcontrol<-plco_core_data[which (plco_core_data$subject_id %in% plcocontrol),]
 #colnames(nhs2_brca_data)
 
-library('tidyverse')
-nhs_allcontrol<- nhs_allcontrol %>%
-  add_column(lastfup=NA,
-             dxdate_primary1=NA,
-             dxdate_primary2=NA,
-             detection_primary1=NA,
-             detection_detail_primary1=NA,
-             detection_detail_primary2=NA,
-             detection_primary2=NA,
-             invasive_primary1=NA,
-             invasive_primary2=NA,
-             grade_primary1=NA,
-             size_primary1=NA,
-             sizecat_primary1=NA, 
-             er_primary1=NA,
-             er_primary2=NA,
-             pr_primary1=NA,
-             pr_primary2=NA,
-             her2_primary1=NA,
-             her2_primary2=NA,
-             ki67_primary1=NA,
-             ki67_primary2=NA,
-             ki67cat_primary1=NA,
-             ki67cat_primary2=NA,
-             stage_primary1=NA,
-             stage_primary2=NA,
-             grade_primary2=NA,
-             size_primary2=NA,
-             sizecat_primary2=NA,
-             case=0
-             
-  )
 
-nhs2_allcontrol<- nhs2_allcontrol %>%
-  add_column(lastfup=NA,
-             dxdate_primary1=NA,
-             dxdate_primary2=NA,
-             detection_primary1=NA,
-             detection_detail_primary1=NA,
-             detection_detail_primary2=NA,
-             detection_primary2=NA,
-             invasive_primary1=NA,
-             invasive_primary2=NA,
-             grade_primary1=NA,
-             size_primary1=NA,
-             sizecat_primary1=NA, 
-             er_primary1=NA,
-             er_primary2=NA,
-             pr_primary1=NA,
-             pr_primary2=NA,
-             her2_primary1=NA,
-             her2_primary2=NA,
-             ki67_primary1=NA,
-             ki67_primary2=NA,
-             ki67cat_primary1=NA,
-             ki67cat_primary2=NA,
-             stage_primary1=NA,
-             stage_primary2=NA,
-             grade_primary2=NA,
-             size_primary2=NA,
-             sizecat_primary2=NA,
-             case=0
-             
-  )
+#Match columns in case and control datasets- add columns
+names.case<-colnames(nhs_allcase)
+names.control<-colnames(nhs_allcontrol)
+#add.names contains a vector of columns from case that you want to add to control dataframe before merging
+add.names <-setdiff(a,b)
 
-plco_allcontrol<- plco_allcontrol %>%
-  add_column(lastfup=NA,
-             dxdate_primary1=NA,
-             dxdate_primary2=NA,
-             detection_primary1=NA,
-             detection_detail_primary1=NA,
-             detection_detail_primary2=NA,
-             detection_primary2=NA,
-             invasive_primary1=NA,
-             invasive_primary2=NA,
-             grade_primary1=NA,
-             size_primary1=NA,
-             sizecat_primary1=NA, 
-             er_primary1=NA,
-             er_primary2=NA,
-             pr_primary1=NA,
-             pr_primary2=NA,
-             her2_primary1=NA,
-             her2_primary2=NA,
-             ki67_primary1=NA,
-             ki67_primary2=NA,
-             ki67cat_primary1=NA,
-             ki67cat_primary2=NA,
-             stage_primary1=NA,
-             stage_primary2=NA,
-             grade_primary2=NA,
-             size_primary2=NA,
-             sizecat_primary2=NA,
-             case=0
-  )
+for (i in add.names){
+  nhs_allcontrol[,i]<-NA
+  nhs2_allcontrol[,i]<-NA
+  plco_allcontrol[,i]<-NA
+}
+nhs_allcontrol$case<-0
+nhs2_allcontrol$case<-0
+plco_allcontrol$case<-0
+
 
 plco_allcase$case<-1
 plco_allcase$cohort<-"PLCO"
@@ -232,17 +153,17 @@ colnames(plco_all)[colnames(plco_all) == "bbd_type4"] ="BBD_type4"
   library("lubridate")
   
   data1 <- data1 %>%
-    mutate(record_date=as.Date(record_date, format="%d/%m/%Y"))
+    mutate(record_date=as.Date(record_date, format="%d/%m/%Y"),
+           BBD_date1=ymd(BBD_year1, truncated=2L),
+           BBD_date2=ymd(BBD_year2, truncated=2L),
+           BBD_date3=ymd(BBD_year3, truncated=2L),
+           BBD_date4=ymd(BBD_year4, truncated=2L),
+           birth_date=ymd(birth_year, truncated=2L),
+           lastscreen_date=ymd(lastscreen_year, truncated=2L),
+           primary1dx_date=ymd(dxdate_primary1, truncated=2L),
+           primary2dx_date=ymd(dxdate_primary2, truncated=2L),
+           lastfup_date=ymd(lastfup, truncated=2L))
   
-  data1$BBD_date1<-ymd(data1$BBD_year1, truncated=2L)
-  data1$BBD_date2<-ymd(data1$BBD_year2, truncated=2L)
-  data1$BBD_date3<-ymd(data1$BBD_year3, truncated=2L)
-  data1$BBD_date4<-ymd(data1$BBD_year4, truncated=2L)
-  data1$birth_date<-ymd(data1$birth_year, truncated=2L)
-  data1$lastscreen_date<-ymd(data1$lastscreen_year, truncated=2L)
-  data1$primary1dx_date<-ymd(data1$dxdate_primary1, truncated=2L)
-  data1$primary2dx_date<-ymd(data1$dxdate_primary2, truncated=2L)
-  data1$lastfup_date<-ymd(data1$lastfup, truncated=2L)
   
   #Filter outliers
   data1$age_outlier           <-ifelse(data1$age<=0   |data1$age<777     & data1$age>100, 1, 0)
