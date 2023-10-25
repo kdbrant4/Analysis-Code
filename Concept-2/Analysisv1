@@ -17,11 +17,11 @@ library(boxr)
   # If you are not already logged into Box after running this code, you may be
   # asked to log into Box. Identify Box as hard disk in the cloud.
   
-  box_auth(client_id = "627lww8un9twnoa8f9rjvldf7kb56q1m",
-           client_secret = "gSKdYKLd65aQpZGrq9x4QVUNnn5C8qqm") 
+  box_auth(client_id = "xxx",
+           client_secret = "xxx") 
   
   # Set the working directory to your Box folder using the folder ID
-  box_setwd(dir_id=216031179182)
+  box_setwd(dir_id=xxx)
 
   ###########################
   # READING IN FILES
@@ -32,12 +32,12 @@ library(boxr)
   
   # NOTE: The file ID is needed to read in the data
   
-  nhs_core_data =  box_read(file_id = 1245072725343)
-  nhs_brca_data =  box_read(file_id = 1245060603521)
-  nhs2_core_data = box_read(file_id = 1234617009726)
-  nhs2_brca_data = box_read(file_id = 1234617300601)
-  plco_core_data = box_read(file_id = 1288862420965)
-  plco_brca_data = box_read(file_id = 1288860429050)
+  nhs_core_data =  box_read(file_id = xx)
+  nhs_brca_data =  box_read(file_id = xx)
+  nhs2_core_data = box_read(file_id = xx)
+  nhs2_brca_data = box_read(file_id = xx)
+  plco_core_data = box_read(file_id = xx)
+  plco_brca_data = box_read(file_id = xx)
   
   nhs_core_data$cohort<-"NHS"
   nhs2_core_data$cohort<-"NHS2"
